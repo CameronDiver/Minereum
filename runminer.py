@@ -19,6 +19,7 @@ def readableHash(hps):
     return '%s%s%s' % (str(round(hpsf, 3)), prefixes[prefixIdx], '/s')
 
 def rollingAverage(speedList):
+    # TODO: rolling average
     return numpy.mean(speedList)
 
 
@@ -82,5 +83,4 @@ try:
 except KeyboardInterrupt:
     print 'Received keyboard interrupt, stopping processes...'
 finally:
-    os.kill(process.pid, signal.SIGINT)
     process.wait()

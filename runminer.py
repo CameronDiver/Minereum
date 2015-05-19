@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 from subprocess import Popen, PIPE
-import sys, time, os, signal
+import sys, time, os, signal, numpy
 
 # hammer hexcode 01f528 Mined block block number [maybe not that order]
 
 OUTPUT_DELAY = 2
-
+SPEED_MAX_SAMPLE_SIZE = 100
 
 def readableHash(hps):
     prefixes = ['h', 'Kh', 'Mh', 'Gh', 'Th', 'Ph']
@@ -18,13 +18,17 @@ def readableHash(hps):
 
     return '%s%s%s' % (str(round(hpsf, 3)), prefixes[prefixIdx], '/s')
 
+def rollingAverage(speedList):
+    return numpy.mean(speedList)
+
+
 
 command = [
     'ethminer',
 ]
 
 if len(sys.argv)< 2:
-    print 'Runing on CPU'
+    print 'Running on CPU'
 else:
     if sys.argv == '-G':
         print 'Sorry, only -G switch supported'
@@ -40,6 +44,10 @@ timeCheck = 0
 HPS = 0
 
 gotHPS = False
+gotRollingValues = False
+
+speedList = [0] * SPEED_MAX_SAMPLE_SIZE
+speedInsertIdx = 0
 
 try:
     while True:
@@ -55,12 +63,24 @@ try:
                 HPS = int(stripped[8])
                 gotHPS = True
 
+                # insert the HPS in the size list
+                if speedInsertIdx >= SPEED_MAX_SAMPLE_SIZE:
+                    gotRollingValues = True
+                    speedInsertIdx = 0
+                speedList[speedInsertIdx] = HPS
+                speedInsertIdx += 1
+
+
         if gotHPS and (time.time() - timeCheck) > OUTPUT_DELAY:
-            print 'Current Speed: %s' % readableHash(HPS)
+            if gotRollingValues:
+                print 'Average Speed: %s' % readableHash(rollingAverage(speedList))
+            else:
+                print 'Current Speed: %s [Waiting for more results]' % readableHash(HPS)
             timeCheck = time.time()
+
 
 except KeyboardInterrupt:
     print 'Received keyboard interrupt, stopping processes...'
-    os.kill(process.pid, signal.SIGINT)
 finally:
+    os.kill(process.pid, signal.SIGINT)
     process.wait()

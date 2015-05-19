@@ -103,10 +103,6 @@ if config['benchmark']:
 # TODO: run server
 
 print "Running command '%s'" % ' '.join(command)
-print config
-
-
-sys.exit()
 
 process = Popen(command, stderr=PIPE)
 

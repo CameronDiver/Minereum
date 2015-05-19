@@ -1,24 +1,11 @@
-from subprocess import Popen, PIPE
-import sys, time
+#!/usr/bin/env python
 
-# ['\x1b[94m', 
-#   '\xe2\x84\xb9', 
-#   '\x1b[35m15:47:28\x1b[0m\x1b[30m|\x1b[34methminer\x1b[0m',
-#   'Mining',
-#   'on',
-#   'PoWhash',
-#   '\x1b[96m#af9879dd\xe2\x80\xa6\x1b[0m',
-#   ':',
-#   '0',
-#   'H/s',
-#   '=',
-#   '0',
-#   'hashes',
-#   '/',
-#   '0.5',
-#   's\n']
+from subprocess import Popen, PIPE
+import sys, time, os, signal
 
 # hammer hexcode 01f528 Mined block block number [maybe not that order]
+
+OUTPUT_DELAY = 2
 
 
 def readableHash(hps):
@@ -51,20 +38,29 @@ process = Popen(command, stderr=PIPE)
 
 timeCheck = 0
 HPS = 0
-while True:
-    line = process.stderr.readline()
-    if line == '':
-        break
 
-    parts = line.split(' ')
-    stripped = filter(lambda x: len(x) != 0, parts)
+gotHPS = False
 
-    if len(stripped) > 9:
-        if stripped[9] == 'H/s':
-            HPS = int(stripped[8])
+try:
+    while True:
+        line = process.stderr.readline()
+        if line == '':
+            break
 
-    if (time.time() - timeCheck) > 5:
-        print 'Current Hashes/Second: %s' % readableHash(HPS)
-        timeCheck = time.time()
+        parts = line.split(' ')
+        stripped = filter(lambda x: len(x) != 0, parts)
 
-process.wait()
+        if len(stripped) > 9:
+            if stripped[9] == 'H/s':
+                HPS = int(stripped[8])
+                gotHPS = True
+
+        if gotHPS and (time.time() - timeCheck) > OUTPUT_DELAY:
+            print 'Current Speed: %s' % readableHash(HPS)
+            timeCheck = time.time()
+
+except KeyboardInterrupt:
+    print 'Received keyboard interrupt, stopping processes...'
+    os.kill(process.pid, signal.SIGINT)
+finally:
+    process.wait()

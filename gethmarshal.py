@@ -1,10 +1,20 @@
 from subprocess import Popen, PIPE
 import os, signal, threading
 
+
+# Important output
+# Block synchronisation started
+# Mining operation aborted due to sync operation
+# imported 256 block(s) (0 queued 0 ignored) in 2.372852125s. #396572 [7b317a5e / c58170d4]
+# Starting mining operation (CPU=0 TOT=1)
+
+
+
 class GethMarshal(object):
     # TODO: get the location of the geth binary from config file
-    def __init__(self, geth):
-        self.gethFile = geth
+    def __init__(self, config):
+        self.config = config
+        self.gethFile = config['geth-server']
 
         self.command = [
             self.gethFile,
@@ -22,7 +32,7 @@ class GethMarshal(object):
 
     def runGeth(self):
         # run the process in another thread
-        print 'Starting Geth...'
+        #print 'Starting '+' '.join(self.command)+'...'
         self.thread = self.GethThread(self.command)
         self.thread.start()
         self.thread.running = True
@@ -41,7 +51,7 @@ class GethMarshal(object):
 
         self.thread.outputLock.acquire()
         if len(self.thread.output) > 0:
-            line = self.thread.output.pop(0)
+            line = self.thread.output.pop(0).strip()
         else:
             line = None
         self.thread.outputLock.release()

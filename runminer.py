@@ -3,6 +3,10 @@
 from subprocess import Popen, PIPE
 import sys, time, os, signal, numpy
 import getopt
+import traceback
+from logger import Logger
+from emmarshal import EthminerMarshal
+from gethmarshal import GethMarshal
 
 # hammer hexcode 01f528 Mined block block number [maybe not that order]
 
@@ -15,26 +19,28 @@ DEFAULTS = {
     'run-server' : False,
     'geth-server': 'geth',
     'ethminer': 'ethminer',
-    'output-poll-time': 2
+    'verbose': False,
+    'hps-sample-size': 100
 }
 
 OPTIONS = (
-    "hGMst:",
+    "hGMsv",
     [
-        'geth='
-        'ethminer='
+        'geth=',
+        'ethminer=',
         'help'
     ]
 )
 
 def printUsage():
     print 'runminer.py - Ethereum mining helper script using ethminer and geth.'
-    print 'Usage: ./runminer.py [-G] [-M] [-s] [-t n] [--geth-server=] [--ethminer=]'
+    print 'Usage: ./runminer.py [-G] [-M] [-s] [-v] [--geth=] [--ethminer=]'
+    print '\t -h, --help \t This help'
     print '\t -G \t Run on the graphics card'
     print '\t -M \t Perform a benchmark test using ethminer'
     print '\t -s \t Run Geth server before executing ethminer'
-    print '\t -t n \t Wait n seconds before displaying output (default: 2)'
-    print '   --geth-server=    indicates the location of the geth binary'
+    print '\t -v \t Verbose mode (Show every line of output from geth and ethminer)'
+    print '   --geth=    indicates the location of the geth binary'
     print '   --ethminer=       indicates the location of the ethminer binary'
 
 def getOptions(args):
@@ -56,6 +62,8 @@ def getOptions(args):
             config['run-server'] = True
         elif opt == '-t':
             config['output-poll-time'] = int(arg)
+        elif opt == '-v':
+            config['verbose'] = True
         elif opt == '--geth':
             config['geth-server'] = arg
         elif opt == '--ethminer':
@@ -71,81 +79,60 @@ def getOptions(args):
 
     return config
 
-
-
-def readableHash(hps):
-    prefixes = ['h', 'Kh', 'Mh', 'Gh', 'Th', 'Ph']
-    prefixIdx = 0
-    hpsf = float(hps)
-    while hpsf > 1000.0:
-        prefixIdx += 1
-        hpsf /= 1000.0
-
-    return '%s%s%s' % (str(round(hpsf, 3)), prefixes[prefixIdx], '/s')
-
-def rollingAverage(speedList):
-    # TODO: rolling average
-    return numpy.mean(speedList)
-
 config = getOptions(sys.argv[1:])
 
-command = [
-    config['ethminer']
-]
+# Start the logging class before the process so it has somewhere to print to
+log = Logger()
+log.addSrcColour('ethminer', 'bold-blue')
+log.addSrcColour('geth', 'bold-red')
+log.addSrcColour('time', 'bg-green')
+log.addSrcColour('info', 'bold-green')
 
-if config['GPU']:
-    command.append('-G')
-    print 'Running on GPU'
-if config['benchmark']:
-    print 'Running benchmarking test'
-    command.append('-M')
 
-# TODO: run server
+if config['run-server']:
+    geth = GethMarshal(config)
+    log.log('info', "Running command '%s'" % ' '.join(geth.command))
+    geth.runGeth()
 
-print "Running command '%s'" % ' '.join(command)
 
-process = Popen(command, stderr=PIPE)
+ethminer = EthminerMarshal(config)
 
-timeCheck = 0
-HPS = 0
-
-gotHPS = False
-gotRollingValues = False
-
-speedList = [0] * SPEED_MAX_SAMPLE_SIZE
-speedInsertIdx = 0
+lastOutputTime = time.time()
 
 try:
+    log.log('info', "Running command '%s'" % ' '.join(ethminer.command))
+    ethminer.start()
+    time.sleep(1)
     while True:
-        line = process.stderr.readline()
-        if line == '':
-            break
-
-        parts = line.split(' ')
-        stripped = filter(lambda x: len(x) != 0, parts)
-
-        if len(stripped) > 9:
-            if stripped[9] == 'H/s':
-                HPS = int(stripped[8])
-                gotHPS = True
-
-                # insert the HPS in the size list
-                if speedInsertIdx >= SPEED_MAX_SAMPLE_SIZE:
-                    gotRollingValues = True
-                    speedInsertIdx = 0
-                speedList[speedInsertIdx] = HPS
-                speedInsertIdx += 1
+        
+        if config['run-server']:
+            lines = []
+            line = geth.getOutputLine()
+            while line != None:
+                lines.append(line)
+                line = geth.getOutputLine()
+            
+            for line in lines:
+                if config['verbose']:
+                    if line != None:
+                        log.log('geth', line)
 
 
-        if gotHPS and (time.time() - timeCheck) > OUTPUT_DELAY:
-            if gotRollingValues:
-                print 'Average Speed: %s' % readableHash(rollingAverage(speedList))
+        lines = ethminer.getOutput()
+        for line in lines:
+            strLine = line[1]
+            if line[0] == '':
+                log.log('ethminer', strLine.strip())
             else:
-                print 'Current Speed: %s [Waiting for more results]' % readableHash(HPS)
-            timeCheck = time.time()
-
+                log.logDynamic('ethminer', line[0], line[1])
 
 except KeyboardInterrupt:
     print 'Received keyboard interrupt, stopping processes...'
+except:
+    print traceback.format_exc()
+
 finally:
-    process.wait()
+    if config['run-server']:
+        geth.killGeth()
+    ethminer.stop()
+    

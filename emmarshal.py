@@ -57,7 +57,17 @@ class EthminerMarshal(object):
             
             self.process.wait()
 
+
     def getOutput(self):
+
+        # TODO: there is a line which says grabbing DAG for [hashcode]
+        # which I *think* is only there when then bulk of the DAG
+        # has been generated (when it blocks mining) whereas the mode which
+        # doesnt block mining, it's not as important to know about the DAG 
+        # in the background so check for the grabbing line, then change a state
+        # variable so the DAG lines will always be ignored if it doesnt need
+        # to do a bulk regenerate (each new epoch)
+
         lines = self.readStream()
         # simulate a network break
         #import time
@@ -95,8 +105,8 @@ class EthminerMarshal(object):
                     #ret.append(('', ' '.join(stripped[2:])))
                     pass
                 else:
-                    #pass
-                    ret.append(('', ' '.join(stripped)))
+                    pass
+                    #ret.append(('', ' '.join(stripped)))
 
             except IndexError:
                 # TODO: implement debug switch

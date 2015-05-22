@@ -40,6 +40,8 @@ class Logger(object):
         self.gotDynamic = False
         self.currentDynamic = ('', '', '')
 
+        self.dynamics = []
+
         self.termSize = self.getTermSize()
 
         # # Dont leave this here but use like this
@@ -138,6 +140,13 @@ class Logger(object):
         sys.stdout.flush()
 
     def logDynamic(self, source, dynId, message):
+
+        if(dynId[0] == '/'):
+            for idx, dyn in self.dynamics:
+                if dynId[1:] == dyn[1]:
+                    del self.dynamics[idx]
+                    break
+
         if self.gotDynamic:
             # check if its ending dynamic
             if dynId[0] == '/':
@@ -154,8 +163,10 @@ class Logger(object):
                 # Commenting out this part and testing another, seeing if rather than
                 # it being rigid and need dynamic outputs to be ended, it just switches to the other
                 # didnt work, TODO: try this properly
-                self.log('ERROR', "Internal error: DynamicOutput code error. Current: %s, given: %s" % (self.currentDynamic[1], dynId))
-                sys.exit()
+                #self.log('ERROR', "Internal error: DynamicOutput code error. Current: %s, given: %s" % (self.currentDynamic[1], dynId))
+                #sys.exit()
+                # print a newline
+                print ' '
 
             # clear the line
             self.clearLine()

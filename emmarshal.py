@@ -38,7 +38,8 @@ class EthminerMarshal(object):
 
 
         self.state = {
-            'connection-problem': False
+            'connection-problem': False,
+            'DAG-loaded': False
         }
 
         ############# REMOVE AFTER DEBUGGING
@@ -83,10 +84,13 @@ class EthminerMarshal(object):
                     ret.append(('SPEEDLINE', self.getSpeedOutput()))
                 elif self.isDAGLoadedLine(stripped[2:]):
                     ret.append(('/DAGLINE', ' '.join(stripped[2:])))
+                    self.state['DAG-loaded'] = True
                 elif self.isWorkPackageConfirmLine(stripped[2:]):
                     ret.append(('/DAGLINE', ''))#.join(stripped[2:])))
+                    self.state['DAG-loaded'] = True
                 elif stripped[0] == 'DAG':
-                    ret.append(('DAGLINE', ' '.join(stripped[2:])))
+                    if not self.state['DAG-loaded']:
+                        ret.append(('DAGLINE', ' '.join(stripped[2:])))
                 elif self.isInfoLine(stripped):
                     #ret.append(('', ' '.join(stripped[2:])))
                     pass

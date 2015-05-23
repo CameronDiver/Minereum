@@ -94,16 +94,19 @@ class Logger(object):
         self.moveCursorBack(self.getLastDynamicLength())
 
     def getLastDynamicLength(self):
-        old = '[%s%s%s %s %s%s]\t%s' % (
-                self.colours[self.sourceColours['time']],
-                datetime.now().strftime('%H:%M'),
-                self.colours['end'],
-                self.colours[self.sourceColours[self.currentDynamic[0]]],
-                self.currentDynamic[0],
-                self.colours['end'],
-                self.currentDynamic[2]
-            )
-        return len(old)
+        if self.gotDynamic:
+            old = '[%s%s%s %s %s%s]\t%s' % (
+                    self.colours[self.sourceColours['time']],
+                    datetime.now().strftime('%H:%M'),
+                    self.colours['end'],
+                    self.colours[self.sourceColours[self.currentDynamic[0]]],
+                    self.currentDynamic[0],
+                    self.colours['end'],
+                    self.currentDynamic[2]
+                )
+            return len(old)
+        else:
+            return 0
 
     def moveCursorBack(self, n):
         call(['tput', 'cub', str(n)])
@@ -147,18 +150,19 @@ class Logger(object):
         #             del self.dynamics[idx]
         #             break
 
-        if self.gotDynamic:
-            # check if its ending dynamic
-            if dynId[0] == '/':
-                if dynId[1:] == self.currentDynamic[1]:
-                    self.gotDynamic = False
-
-                self.clearLine()
-                if message == '':
-                    return
-                self.internalLog(source, message)
+        # check if its ending dynamic
+        if dynId[0] == '/':
+            self.clearLine()
+            if dynId[1:] == self.currentDynamic[1]:
+                self.gotDynamic = False
+            
+            if message == '':
                 return
+            self.internalLog(source, message)
+            return
 
+
+        if self.gotDynamic:
             
             if not self.currentDynamic[1] == dynId:
                 # Commenting out this part and testing another, seeing if rather than
@@ -173,7 +177,6 @@ class Logger(object):
             self.clearLine()
             
             self.currentDynamic = (source, dynId, message)
-
             self.internalLogDyn(source, message)
         else:
             self.gotDynamic = True

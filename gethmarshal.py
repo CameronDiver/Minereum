@@ -107,8 +107,10 @@ class GethMarshal(object):
 
 
 if __name__ == '__main__':
-    path = "/home/cameron/go-ethereum/build/bin/geth"
-    gm = GethMarshal(path)
+    config = {
+        'geth-server': "/home/cameron/go-ethereum/build/bin/geth"
+    }
+    gm = GethMarshal(config)
     try:
         gm.runGeth()
         while gm.isRunning():

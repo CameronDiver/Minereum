@@ -20,11 +20,12 @@ DEFAULTS = {
     'geth-server': 'geth',
     'ethminer': 'ethminer',
     'verbose': False,
-    'hps-sample-size': 100
+    'hps-sample-size': 10,
+    'debug': False
 }
 
 OPTIONS = (
-    "hGMsv",
+    "hGMsvd",
     [
         'geth=',
         'ethminer=',
@@ -71,6 +72,8 @@ def getOptions(args):
         elif opt in ('-h', '--help'):
             printUsage()
             sys.exit()
+        elif opt == '-d':
+            config['debug'] = True
     
     # Set any unset values to the default
     for key in DEFAULTS:

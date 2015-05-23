@@ -60,14 +60,6 @@ class EthminerMarshal(object):
 
     def getOutput(self):
 
-        # TODO: there is a line which says grabbing DAG for [hashcode]
-        # which I *think* is only there when then bulk of the DAG
-        # has been generated (when it blocks mining) whereas the mode which
-        # doesnt block mining, it's not as important to know about the DAG 
-        # in the background so check for the grabbing line, then change a state
-        # variable so the DAG lines will always be ignored if it doesnt need
-        # to do a bulk regenerate (each new epoch)
-
         lines = self.readStream()
         # simulate a network break
         #import time
@@ -94,7 +86,7 @@ class EthminerMarshal(object):
                     ret.append(('SPEEDLINE', self.getSpeedOutput()))
                 elif self.isDAGLoadedLine(stripped[2:]):
                     ret.append(('/DAGLINE', ' '.join(stripped[2:])))
-                    self.state['DAG-loaded'] = True
+                    #self.state['DAG-loaded'] = True
                 elif self.isWorkPackageConfirmLine(stripped[2:]):
                     ret.append(('/DAGLINE', ''))#.join(stripped[2:])))
                     self.state['DAG-loaded'] = True
@@ -102,11 +94,11 @@ class EthminerMarshal(object):
                     if not self.state['DAG-loaded']:
                         ret.append(('DAGLINE', ' '.join(stripped[2:])))
                 elif self.isInfoLine(stripped):
-                    #ret.append(('', ' '.join(stripped[2:])))
-                    pass
+                    if self.config['verbose'] or self.config['debug']:
+                        ret.append(('', ' '.join(stripped[2:])))   
                 else:
-                    pass
-                    #ret.append(('', ' '.join(stripped)))
+                    if self.config['verbose'] or self.config['debug']:
+                        ret.append(('', ' '.join(stripped)))   
 
             except IndexError:
                 # TODO: implement debug switch
@@ -184,13 +176,13 @@ class EthminerMarshal(object):
 
 
     def readableHash(self, hps):
-        prefixes = ['h', 'Kh', 'Mh', 'Gh', 'Th', 'Ph']
+        prefixes = ['', 'K', 'M', 'G', 'T', 'P']
         prefixIdx = 0
         hpsf = float(hps)
         while hpsf > 1000.0:
             prefixIdx += 1
             hpsf /= 1000.0
-        return '%s%s%s' % (str(round(hpsf, 3)), prefixes[prefixIdx], '/s')
+        return '%s%s%s' % (str(round(hpsf, 3)), prefixes[prefixIdx], 'H/s')
 
     def stripBashColours(self, str):
         str2 = re.sub(r'\x1b[^m]*m', '', str)

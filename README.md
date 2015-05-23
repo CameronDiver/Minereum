@@ -1,5 +1,5 @@
 # RunEthereumMiner
-A short script to mine Ether and parse the output to produce more meaningful information. RunEthereumMiner starts an ethereum node using Geth and a standalone miner using Ethminer. Geth works in conjunction with Ethminer, using the standalone miner as a worker and Geth as a scheduler communicating via JSON-RPC.
+A short script to mine Ether and parse the output to produce more meaningful information. RunEthereumMiner starts an ethereum node using Geth and a standalone miner using Ethminer. Geth works in conjunction with Ethminer, using Ethminer as a worker and Geth as a scheduler communicating via JSON-RPC.
 
 ## Features
 * One command spawns all neccessary tasks
@@ -10,9 +10,9 @@ A short script to mine Ether and parse the output to produce more meaningful inf
 ## Install
 * Ensure you have installed Geth and set up an account.
 * Ensure you have installed Ethminer and checked it runs correctly.
-* Clone the repositiory "git clone https://github.com/CameronDiver/RunEthereumMiner.git"
-* Move into the "RunEthereumMiner" directory 
-* Run the command "python runminer.py -h" to view the usage options.
+* Clone the repositiory `git clone https://github.com/CameronDiver/RunEthereumMiner.git`
+* Move into the `RunEthereumMiner` directory 
+* Run the command `python runminer.py -h` to view the usage options.
 
 ## GPU Mining
 * Run the command "python runminer.py -G -s --geth="path to Geth" --ethminer="path to Ethminer"

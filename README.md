@@ -45,7 +45,7 @@ python runminer.py -G -s --geth="../go-ethereum/build/bin/geth" --ethminer="/usr
 ```
 
 ## More Information
-For more information on installing Geth and Ethminer take a look at the [wiki].(http://ethereum.gitbooks.io/frontier-guide/content/mining.html)
+For more information on installing Geth and Ethminer take a look at the [wiki](http://ethereum.gitbooks.io/frontier-guide/content/mining.html).
 To see the Ethereum network stats take a look at [stats.ethdev.com](https://stats.ethdev.com/)
 
 ## Todo

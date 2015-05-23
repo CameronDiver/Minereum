@@ -4,6 +4,7 @@ A short script to mine Ether and parse the output to produce more meaningful inf
 ## Features
 * One command spawns all neccessary tasks
 * Meaningful log messages
+* Average hash rate, updates on one line
 * Mine on GPU or CPU
 * Benchmarking
 
@@ -28,20 +29,7 @@ python runminer.py -G -s --geth="../go-ethereum/build/bin/geth" --ethminer="/usr
 [22:37  ethminer]	Connecting to geth JSON... 
 [22:37  ethminer]	Connected.
 [22:37  ethminer]	Full DAG loaded 
- 
-[22:37  ethminer]	Current Speed: 0.0h/s		[Waiting for more results] 
-[22:37  ethminer]	Current Speed: 1.92Mh/s		[Waiting for more results] 
-[22:37  ethminer]	Current Speed: 1.573Mh/s	[Waiting for more results] 
-[22:37  ethminer]	Current Speed: 1.945Mh/s	[Waiting for more results] 
-[22:37  ethminer]	Current Speed: 1.746Mh/s	[Waiting for more results] 
-[22:37  ethminer]	Current Speed: 1.974Mh/s	[Waiting for more results] 
-[22:38  ethminer]	Current Speed: 1.049Mh/s	[Waiting for more results] 
-[22:38  ethminer]	Current Speed: 1.986Mh/s	[Waiting for more results] 
-[22:38  ethminer]	Current Speed: 1.049Mh/s	[Waiting for more results] 
-[22:38  ethminer]	Current Speed: 1.573Mh/s	[Waiting for more results] 
-[22:38  ethminer]	Current Speed: 1.945Mh/s	[Waiting for more results] 
-[22:38  ethminer]	Current Speed: 1.987Mh/s	[Waiting for more results] 
-[22:38  ethminer]	Average Speed: 1.798Mh/s 
+[22:37  ethminer]	Average Speed: 1.798Mh/s 
 ```
 
 ## More Information

@@ -8,11 +8,11 @@ A short script to mine Ether and parse the output to produce more meaningful inf
 * Benchmarking
 
 ## Install
-* Ensure you have installed Geth and set up an account.
-* Ensure you have installed Ethminer and checked it runs correctly.
+* Ensure you have installed Geth and set up an account
+* Ensure you have installed Ethminer and checked it runs correctly
 * Clone the repositiory `git clone https://github.com/CameronDiver/RunEthereumMiner.git`
 * Move into the `RunEthereumMiner` directory 
-* Run the command `python runminer.py -h` to view the usage options.
+* Run the command `python runminer.py -h` to view the usage options
 
 ## GPU Mining
 * Run the command `python runminer.py -G -s --geth="path to Geth" --ethminer="path to Ethminer`

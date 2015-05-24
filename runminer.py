@@ -16,7 +16,7 @@ SPEED_MAX_SAMPLE_SIZE = 100
 DEFAULTS = {
     'GPU': False,
     'benchmark': False,
-    'run-server' : False,
+    'run-server' : True,
     'geth-server': 'geth',
     'ethminer': 'ethminer',
     'verbose': False,
@@ -39,7 +39,7 @@ def printUsage():
     print '\t -h, --help \t This help'
     print '\t -G \t Run on the graphics card'
     print '\t -M \t Perform a benchmark test using ethminer'
-    print '\t -s \t Run Geth server before executing ethminer'
+    print '\t -s \t Don\'t run Geth server before executing ethminer'
     print '\t -v \t Verbose mode (Show every line of output from geth and ethminer)'
     print '   --geth=    indicates the location of the geth binary'
     print '   --ethminer=       indicates the location of the ethminer binary'
@@ -61,7 +61,7 @@ def getOptions(args):
             config['benchmark'] = True
             config['verbose'] = True
         elif opt == '-s':
-            config['run-server'] = True
+            config['run-server'] = False
         elif opt == '-t':
             config['output-poll-time'] = int(arg)
         elif opt == '-v':
@@ -87,10 +87,6 @@ config = getOptions(sys.argv[1:])
 
 # Start the logging class before the process so it has somewhere to print to
 log = Logger()
-log.addSrcColour('ethminer', 'bold-blue')
-log.addSrcColour('geth', 'bold-red')
-log.addSrcColour('time', 'bg-green')
-log.addSrcColour('info', 'bold-green')
 
 
 if config['run-server']:

@@ -145,10 +145,13 @@ class EthminerMarshal(object):
             lines.append(line)
             ret = select.select(reads, [], [], 0.1)
 
-        # I don't think ethminer actually uses the stdout,
-        # but this keeps blocking indefinitly...
-        #if self.process.stdout.fileno() in ret[0]:
-        #    lines.append(self.process.stdout.readline())
+        reads = [self.process.stdout.fileno()]
+        ret = select.select(reads, [], [], 0.5)
+        if self.config['benchmark']:
+            while self.process.stdout.fileno() in ret[0]:
+                line = self.process.stdout.readline()
+                lines.append(line)
+                ret = select.select(reads, [], [], 0.1)
         # if self.process.stderr.fileno() in ret[0]:
         #     line = self.process.stderr.readline()
         #     return line

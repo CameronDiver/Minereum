@@ -33,8 +33,13 @@ class Logger(object):
             'end'      : '\033[0m'
         }
 
+
         self.sourceColours = {
-            'ERROR': 'bg-red'
+            'ERROR': 'bg-red',
+            'ethminer': 'bold-blue',
+            'geth': 'bold-red',
+            'time': 'bg-green',
+            'info': 'bold-green'
         }
 
         self.gotDynamic = False
@@ -43,14 +48,11 @@ class Logger(object):
         self.dynamics = []
 
         self.termSize = self.getTermSize()
+        self.offsetSize = self.getMaxSourceLength()
 
-        # # Dont leave this here but use like this
-        # self.nameColours = {
-        #     'ethminer' : 'bold-blue',#'bg-green',
-        #     'geth'     : 'bold-red',#'bg-red'
+        self.offsetWithoutSource = len(datetime.now().strftime('%H:%M')) + 1
 
-        #     'time'     : 'bg-green'
-        # }
+        self.offset = self.offsetWithoutSource + self.offsetSize
     
     def getTermSize(self):
         p = Popen(['tput', 'lines'], stdout=PIPE)
@@ -66,6 +68,11 @@ class Logger(object):
         cols = int(output[0].strip())
 
         return (lines, cols)
+
+    def getMaxSourceLength(self):
+        a = [len(source) for source in self.sourceColours]
+        return max(a)
+
 
     def addSrcColour(self, source, colourName):
         assert colourName in self.colours
@@ -120,24 +127,26 @@ class Logger(object):
         #call(['tput', 'rc'])
 
     def internalLog(self, source, message):
-        print '[%s%s%s %s %s%s]\t%s' % (
+        print '[%s%s%s %s %s%s]%s%s' % (
                 self.colours[self.sourceColours['time']],
                 datetime.now().strftime('%H:%M'),
                 self.colours['end'],
                 self.colours[self.sourceColours[source]],
                 source,
                 self.colours['end'],
+                ' '*(self.offsetSize - len(source) + 3),
                 message
             )
     def internalLogDyn(self, source, message):
 
-        sys.stdout.write('[%s%s%s %s %s%s]\t%s' % (
+        sys.stdout.write('[%s%s%s %s %s%s]%s%s' % (
                 self.colours[self.sourceColours['time']],
                 datetime.now().strftime('%H:%M'),
                 self.colours['end'],
                 self.colours[self.sourceColours[source]],
                 source,
                 self.colours['end'],
+                ' '*(self.offsetSize - len(self.currentDynamic[0]) + 3),
                 message
             ))
         sys.stdout.flush()

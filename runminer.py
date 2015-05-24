@@ -59,6 +59,7 @@ def getOptions(args):
             config['GPU'] = True
         elif opt == '-M':
             config['benchmark'] = True
+            config['verbose'] = True
         elif opt == '-s':
             config['run-server'] = True
         elif opt == '-t':

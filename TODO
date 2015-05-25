@@ -1,1 +1,4 @@
 Make the geth marshal class use select not threading
+
+print newline in the keyboardinterrupt handler and then print remaining
+output from the streams before shutting down

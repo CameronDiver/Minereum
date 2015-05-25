@@ -45,19 +45,43 @@ class GethMarshal(object):
        
 
 
-    def getOutputLine(self):
+    def getOutputLines(self):
         if self.thread is None:
             raise ValueError('Process has not been started yet')
-
+        lines = []
         self.thread.outputLock.acquire()
-        if len(self.thread.output) > 0:
+        while len(self.thread.output) > 0:
             line = self.thread.output.pop(0).strip()
-        else:
-            line = None
+            lines.append(line)
         self.thread.outputLock.release()
 
-        return line
+        return lines
 
+    def getOutput(self):
+        lines = self.getOutputLines()
+
+        retLines = []
+        for line in lines:
+            stripped = filter(lambda a: a != '', line.split(' '))
+            if self.isStartMiningOperation(stripped):
+                retLines.append(' '.join(stripped))
+            elif self.isMiningAbortedLine(stripped):
+                retLines.append(' '.join(stripped))
+            else:
+                if self.config['verbose'] or self.config['debug']:
+                    retLines.append(' '.join(stripped))
+
+        return retLines
+
+
+
+    def isStartMiningOperation(self, stripped):
+        # Starting mining operation (CPU=0 TOT=1)
+        return stripped[0] == 'Starting' and stripped[1] == 'mining' and stripped[2] == 'operation'
+
+    def isMiningAbortedLine(self, stripped):
+        #  Mining operation aborted
+        return stripped[0] == "Mining" and stripped[1] == "operation" and stripped[2] == 'aborted'
 
         
 
@@ -77,7 +101,13 @@ class GethMarshal(object):
 
         
         def run(self):
-            self.process = Popen(self.command, stderr=PIPE)
+            try:
+                self.process = Popen(self.command, stderr=PIPE)
+                self.running = True
+            except Exception:
+                self.running = False
+                return
+
             while not self.stopRequest.is_set():
                 line = self.process.stderr.readline()
                 if line == '':

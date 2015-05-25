@@ -67,6 +67,12 @@ class GethMarshal(object):
                 retLines.append(' '.join(stripped))
             elif self.isMiningAbortedLine(stripped):
                 retLines.append(' '.join(stripped))
+            elif self.isProtocolVersionLine(stripped):
+            	retLines.append(' '.join(stripped))
+            elif self.isBlockChainVersionLine(stripped):
+            	retLines.append(' '.join(stripped))
+            elif self.isStartingServerLine(stripped):
+            	retLines.append(' '.join(stripped))
             else:
                 if self.config['verbose'] or self.config['debug']:
                     retLines.append(' '.join(stripped))
@@ -83,6 +89,17 @@ class GethMarshal(object):
         #  Mining operation aborted
         return stripped[0] == "Mining" and stripped[1] == "operation" and stripped[2] == 'aborted'
 
+    def isProtocolVersionLine(self, stripped):
+    	# Protocol Version: 60, Network Id: 0
+    	return stripped[0] == "Protocol" and stripped[1] == "Version:"
+
+    def isBlockChainVersionLine(self, stripped):
+        #  Blockchain DB Version: 2
+        return stripped[0] == "Blockchain" and stripped[1] == "DB" and stripped[2] == 'Version:'
+
+    def isStartingServerLine(self, stripped):
+        #  Starting Server
+        return stripped[0] == "Starting" and stripped[1] == "Server"
         
 
     def killGeth(self):

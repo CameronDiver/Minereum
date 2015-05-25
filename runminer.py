@@ -43,6 +43,8 @@ def printUsage():
     print '\t -v \t Verbose mode (Show every line of output from geth and ethminer)'
     print '   --geth=    indicates the location of the geth binary'
     print '   --ethminer=       indicates the location of the ethminer binary'
+    print '\nCreated by Cameron Diver  (cameron.diver94@gmail.com)'
+    print '     and   Joseph Roberts'
 
 def getOptions(args):
     config = {}

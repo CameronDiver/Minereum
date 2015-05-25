@@ -20,7 +20,8 @@ class GethMarshal(object):
             self.gethFile,
             '--rpccorsdomain',
             'localhost',
-            '--rpc'
+            '--rpc',
+            '--autodag'
             # TODO: interface with the javascript console
             #console
         ]

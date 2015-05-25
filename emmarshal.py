@@ -23,6 +23,7 @@ class EthminerMarshal(object):
 
         self.hpsSampleSize = config['hps-sample-size']
 
+        self.gotHPS = False
         self.lastHPS = 0
 
         self.gotRollingValues = False
@@ -83,7 +84,7 @@ class EthminerMarshal(object):
                     pass
                 elif self.isMiningLine(stripped[2:]):
                     self.handleHPS(float(stripped[7]))
-                    ret.append(('SPEEDLINE', self.getSpeedOutput()))
+                    #ret.append(('SPEEDLINE', self.getSpeedOutput()))
                 elif self.isDAGLoadedLine(stripped[2:]):
                     ret.append(('/DAGLINE', ' '.join(stripped[2:])))
                     #self.state['DAG-loaded'] = True
@@ -109,12 +110,16 @@ class EthminerMarshal(object):
         return ret
 
     def handleHPS(self, hps):
+        self.gotHPS = True
         self.lastHPS = hps
         if self.speedListIdx == self.config['hps-sample-size']:
             self.speedListIdx = 0
             self.gotRollingValues = True
         self.speedList[self.speedListIdx] = hps
         self.speedListIdx += 1
+
+    def isGrabbingDAGLine(self, stripped):
+        return stripped[0] == 'Grabbing' and stripped[1] == "DAG" and stipped[2] == "for"
 
     def isDAGLoadedLine(self, stripped):
         return stripped[0] == 'Full' and stripped[1] == 'DAG' and stripped[2] == 'loaded'
@@ -128,7 +133,7 @@ class EthminerMarshal(object):
     def isWorkPackageLine(self, stripped):
         return stripped[0] == 'Getting' and stripped[1] == 'work' and stripped[2] == 'package...'
 
-    def isJSONProblemLine(self, stripped):
+    def isJSONProblemLine(self, stripped): 
         return stripped[0] == "JSON-RPC" and stripped[1] == "problem."
 
     def isLoadingFromHashLibLine(self, stripped):

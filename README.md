@@ -16,10 +16,10 @@ A short script to mine Ether and parse the output to produce more meaningful inf
 * Run the command `python runminer.py -h` to view the usage options
 
 ## GPU Mining
-* Run the command `python runminer.py -G -s --geth="path to Geth" --ethminer="path to Ethminer`
+* Run the command `python runminer.py -G --geth="path to Geth" --ethminer="path to Ethminer`
 
 ## CPU Mining
-* Run the command `python runminer.py -s --geth="path to Geth" --ethminer="path to Ethminer`
+* Run the command `python runminer.py --geth="path to Geth" --ethminer="path to Ethminer`
 
 ## Output
 ```

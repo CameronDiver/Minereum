@@ -161,13 +161,19 @@ class Logger(object):
 
         # check if its ending dynamic
         if dynId[0] == '/':
-            self.clearLine()
             if dynId[1:] == self.currentDynamic[1]:
-                self.gotDynamic = False
-            
-            if message == '':
-                return
-            self.internalLog(source, message)
+                if message == '':
+                    print ''
+                else:
+                    self.clearLine()
+                    self.gotDynamic = False
+                    self.internalLog(source, message)
+            else:
+                if message == '':
+                    return
+                if self.gotDynamic:
+                    print ''
+                self.internalLog(source, message)
             return
 
 

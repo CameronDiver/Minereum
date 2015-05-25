@@ -43,6 +43,8 @@ def printUsage():
     print '\t -v \t Verbose mode (Show every line of output from geth and ethminer)'
     print '   --geth=    indicates the location of the geth binary'
     print '   --ethminer=       indicates the location of the ethminer binary'
+    print '\nCreated by Cameron Diver  (cameron.diver94@gmail.com)'
+    print '     and   Joseph Roberts'
 
 def getOptions(args):
     config = {}
@@ -107,6 +109,15 @@ try:
     time.sleep(1)
     while True:
         
+        lines = ethminer.getOutput()
+        for line in lines:
+            
+            strLine = line[1]
+            if line[0] == '':
+                log.log('ethminer', strLine.strip())
+            else:
+                log.logDynamic('ethminer', line[0], line[1])
+
         if config['run-server']:
             lines = geth.getOutput()
             
@@ -114,18 +125,10 @@ try:
                 log.log('geth', line)
 
 
-        lines = ethminer.getOutput()
-        for line in lines:
-            strLine = line[1]
-            if line[0] == '':
-                log.log('ethminer', strLine.strip())
-            else:
-                log.logDynamic('ethminer', line[0], line[1])
-
-        if (time.clock() - timeCheck) > config['speed-refresh']:
+        if (time.time() - timeCheck) > config['speed-refresh']:
             if ethminer.gotHPS:
                 log.logDynamic('ethminer', 'SPEEDLINE', ethminer.getSpeedOutput())
-            timeCheck = time.clock()
+            timeCheck = time.time()
 
 except KeyboardInterrupt:
     print '\nReceived keyboard interrupt, stopping processes...'

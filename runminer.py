@@ -10,7 +10,6 @@ from gethmarshal import GethMarshal
 
 # hammer hexcode 01f528 Mined block block number [maybe not that order]
 
-OUTPUT_DELAY = 2
 SPEED_MAX_SAMPLE_SIZE = 100
 
 DEFAULTS = {
@@ -21,7 +20,8 @@ DEFAULTS = {
     'ethminer': 'ethminer',
     'verbose': False,
     'hps-sample-size': 10,
-    'debug': False
+    'debug': False,
+    'speed-refresh': 2
 }
 
 OPTIONS = (
@@ -99,6 +99,8 @@ ethminer = EthminerMarshal(config)
 
 lastOutputTime = time.time()
 
+timeCheck = time.time()
+
 try:
     log.log('info', "Running command '%s'" % ' '.join(ethminer.command))
     ethminer.start()
@@ -119,6 +121,11 @@ try:
                 log.log('ethminer', strLine.strip())
             else:
                 log.logDynamic('ethminer', line[0], line[1])
+
+        if (time.clock() - timeCheck) > config['speed-refresh']:
+            if ethminer.gotHPS:
+                log.logDynamic('ethminer', 'SPEEDLINE', ethminer.getSpeedOutput())
+            timeCheck = time.clock()
 
 except KeyboardInterrupt:
     print '\nReceived keyboard interrupt, stopping processes...'

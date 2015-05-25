@@ -23,7 +23,7 @@ A short script to mine Ether and parse the output to produce more meaningful inf
 
 ## Output
 ```
-python runminer.py -G -s --geth="../go-ethereum/build/bin/geth" --ethminer="/usr/bin/ethminer"
+python runminer.py -G --geth="../go-ethereum/build/bin/geth" --ethminer="/usr/bin/ethminer"
 [22:37  info]	Running command '../go-ethereum/build/bin/geth --rpccorsdomain localhost --rpc'
 [22:37  info]	Running command '/usr/bin/ethminer -G'
 [22:37  ethminer]	Connecting to geth JSON... 
@@ -35,14 +35,4 @@ python runminer.py -G -s --geth="../go-ethereum/build/bin/geth" --ethminer="/usr
 ## More Information
 For more information on installing Geth and Ethminer take a look at the [wiki](http://ethereum.gitbooks.io/frontier-guide/content/mining.html).
 To see the Ethereum network stats take a look at [stats.ethdev.com](https://stats.ethdev.com/)
-
-## Todo
-* Integrate with stats.ethdev
-* Implement interface to JavaScript console
-* Handle DAG generation
-* Handle connection errors - maybe just restart server if connection is lost
-* Handle multiple GPUs
-* Enable mining on GPU and CPU at the same time
-* Show total number of blocks mined and amount of ether earned since the script was started
-* Show prediction of mined block frequency using the current difficulty and computing power
 

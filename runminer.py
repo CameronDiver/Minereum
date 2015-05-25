@@ -106,16 +106,10 @@ try:
     while True:
         
         if config['run-server']:
-            lines = []
-            line = geth.getOutputLine()
-            while line != None:
-                lines.append(line)
-                line = geth.getOutputLine()
+            lines = geth.getOutput()
             
             for line in lines:
-                if config['verbose']:
-                    if line != None:
-                        log.log('geth', line)
+                log.log('geth', line)
 
 
         lines = ethminer.getOutput()
@@ -127,7 +121,8 @@ try:
                 log.logDynamic('ethminer', line[0], line[1])
 
 except KeyboardInterrupt:
-    print 'Received keyboard interrupt, stopping processes...'
+    print '\nReceived keyboard interrupt, stopping processes...'
+    print 'Please wait to avoid ethereum directory corruption.'
 except:
     print traceback.format_exc()
 

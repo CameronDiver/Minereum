@@ -33,6 +33,9 @@ class GethMarshal(object):
 
     def runGeth(self):
         self.process = Popen(self.command, stderr=PIPE, stdout=PIPE)
+        f = open('gethlog.txt', 'w')
+        f.write('Geth Log\n')
+        f.close()
         self.open = [True, True]
         self.running = True
 
@@ -59,8 +62,8 @@ class GethMarshal(object):
 
     def getOutput(self):
         lines = self.getOutputLines()
-
         retLines = []
+        f = open('gethlog.txt', 'a')
         for line in lines:
             try:
                 stripped = filter(lambda a: a != '', line.split(' '))
@@ -74,11 +77,24 @@ class GethMarshal(object):
                 	retLines.append(' '.join(stripped))
                 elif self.isStartingServerLine(stripped):
                 	retLines.append(' '.join(stripped))
-                else:
-                    if self.config['verbose'] or self.config['debug']:
+                elif self.isStoppingServerLine(stripped):
+                	retLines.append(' '.join(stripped))
+                elif self.isDatabaseCloseLine(stripped):
+                	retLines.append(' '.join(stripped))
+                elif self.isWaitingForNetworkSyncLine(stripped):
+                	retLines.append(' '.join(stripped))
+                elif self.isImportingBlocksLine(stripped):
+                	retLines.append(' '.join(stripped))
+                elif self.isBlockSyncStartedLine(stripped):
+                	retLines.append(' '.join(stripped))
+                elif self.config['verbose'] or self.config['debug']:
                         retLines.append(' '.join(stripped))
             except IndexError:
                 retLines.append(' '.join(stripped))
+
+            print line
+            f.write(line + '\n')
+            f.close()
 
         return retLines
 
@@ -103,6 +119,26 @@ class GethMarshal(object):
     def isStartingServerLine(self, stripped):
         #  Starting Server
         return stripped[0] == "Starting" and stripped[1] == "Server"
+
+    def isStoppingServerLine(self, stripped):
+        #   Server stopped
+        return stripped[0] == "Server" and stripped[1] == "stopped"
+
+    def isDatabaseCloseLine(self, stripped):
+        #  flushed and closed db
+        return stripped[0] == "flushed" and stripped[1] == "and" and stripped[2] == "closed"
+
+    def isWaitingForNetworkSyncLine(self, stripped):
+        #  Can not start mining operation due to network sync (starts when finished)
+        return stripped[0] == "Can" and stripped[1] == "not" and stripped[2] == "start"
+
+    def isImportingBlocksLine(self, stripped):
+        #  imported 256 block(s)
+        return stripped[0] == "imported" and stripped[1] == "256"
+
+    def isBlockSyncStartedLine(self, stripped):
+        #  Block synchronisation started
+        return stripped[0] == "Block" and stripped[1] == "synchronisation" and stripped[2] == "started"
         
 
     def killGeth(self):

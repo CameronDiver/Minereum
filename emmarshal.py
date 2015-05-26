@@ -1,6 +1,6 @@
 import numpy
 from subprocess import Popen, PIPE
-import select
+import select, os
 import re
 
 from Queue import Empty
@@ -63,7 +63,7 @@ class EthminerMarshal(object):
 
 
     def getOutput(self):
-
+        
         lines = self.readStream()
         # simulate a network break
         #import time
@@ -144,26 +144,27 @@ class EthminerMarshal(object):
 
     def readStream(self):
         lines = []
-        #reads = [self.process.stdout.fileno(), self.process.stderr.fileno()]
-        reads = [self.process.stderr.fileno()]
+        reads = [self.process.stdout.fileno(), self.process.stderr.fileno()]
+        #reads = [self.process.stderr.fileno()]
+        
         ret = select.select(reads, [], [], 0.5)
-
-        while self.process.stderr.fileno() in ret[0]:
-            line = self.process.stderr.readline()    
+        
+        # TODO: these read calls may not return the whole line which will
+        # mess up the parsing stage so check this
+        if self.process.stderr.fileno() in ret[0]:
+        
+            #line = self.process.stderr.readline()    
+            line = os.read(self.process.stderr.fileno(), 2048)
+        
             lines.append(line)
-            ret = select.select(reads, [], [], 0.1)
 
-        reads = [self.process.stdout.fileno()]
-        ret = select.select(reads, [], [], 0.5)
-        #if self.config['benchmark']:
-        while self.process.stdout.fileno() in ret[0]:
-            line = self.process.stdout.readline()
+        
+
+        if self.process.stdout.fileno() in ret[0]:
+            #line = self.process.stdout.readline()
+            line = os.read(self.process.stdout.fileno(), 2048)
             lines.append(line)
-            ret = select.select(reads, [], [], 0.1)
-        # if self.process.stderr.fileno() in ret[0]:
-        #     line = self.process.stderr.readline()
-        #     return line
-
+        
         return lines
 
     def running(self):

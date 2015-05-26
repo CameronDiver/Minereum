@@ -39,7 +39,6 @@ class GethMarshal(object):
 
     def getOutputLines(self):
         lines = []
-
         # TODO: check if output is '' from either stream and
         # when both have closed process is dead
 

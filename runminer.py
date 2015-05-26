@@ -127,7 +127,11 @@ try:
             gethLines = geth.getOutput()
             
             for line in gethLines:
-                log.log('geth', line)
+                strLine = line[1]
+                if line[0] == '':
+                    log.log('geth', line)
+                else:
+                    log.logDynamic('geth', line[0], line[1])
 
         
         if (time.time() - timeCheck) > config['speed-refresh']:

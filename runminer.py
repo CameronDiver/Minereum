@@ -21,14 +21,16 @@ DEFAULTS = {
     'verbose': False,
     'hps-sample-size': 10,
     'debug': False,
-    'speed-refresh': 2
+    'speed-refresh': 2,
+    'threads': None # Nothing set means don't pass anything to ethminer which is full power
 }
 
 OPTIONS = (
-    "hGMsvd",
+    "hGMsvdt:",
     [
         'geth=',
         'ethminer=',
+        'threads=',
         'help'
     ]
 )
@@ -41,6 +43,8 @@ def printUsage():
     print '\t -M \t Perform a benchmark test using ethminer'
     print '\t -s \t Don\'t run Geth server before executing ethminer'
     print '\t -v \t Verbose mode (Show every line of output from geth and ethminer)'
+    print '\t -t, --threads=   Set the number of CPU/GPU threads to use '
+    print '\t    \t\t(Without this flag ethminer will use all available CPU/GPU threads'
     print '   --geth=    indicates the location of the geth binary'
     print '   --ethminer=       indicates the location of the ethminer binary'
     print '\nCreated by Cameron Diver  (cameron.diver94@gmail.com)'
@@ -55,7 +59,7 @@ def getOptions(args):
         print 'Error parsing input'
         printUsage()
         sys.exit()
-
+        
     for opt, arg in opts:
         if opt == '-G':
             config['GPU'] = True
@@ -64,14 +68,14 @@ def getOptions(args):
             config['verbose'] = True
         elif opt == '-s':
             config['run-server'] = False
-        elif opt == '-t':
-            config['output-poll-time'] = int(arg)
         elif opt == '-v':
             config['verbose'] = True
         elif opt == '--geth':
             config['geth-server'] = arg
         elif opt == '--ethminer':
             config['ethminer'] = arg
+        elif opt in ('-t', '--threads'):
+            config['threads'] = int(arg)
         elif opt in ('-h', '--help'):
             printUsage()
             sys.exit()

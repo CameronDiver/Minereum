@@ -91,8 +91,7 @@ class GethMarshal(object):
                         retLines.append(' '.join(stripped))
             except IndexError:
                 retLines.append(' '.join(stripped))
-
-            print line
+                
             f.write(line + '\n')
             f.close()
 

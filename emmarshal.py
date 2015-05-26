@@ -20,6 +20,9 @@ class EthminerMarshal(object):
             self.command.append('-G')
         if config['benchmark']:
             self.command.append('-M')
+        if config['threads'] is not None:
+            self.command.append('-t')
+            self.command.append(str(config['threads']))
 
         self.hpsSampleSize = config['hps-sample-size']
 

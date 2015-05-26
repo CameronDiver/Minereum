@@ -53,3 +53,4 @@ if __name__ == '__main__':
         print '\t'+str(acc)+'   '+str(gethJSON.weiToEther(gethJSON.getBalance(acc)))+" Eth"
     #gethJSON.weiToEther(gethJSON.getBalance(accs[0]))
     #print gethJSON.getWork()
+    

@@ -1,5 +1,5 @@
 from subprocess import Popen, PIPE
-import os, signal, threading
+import os, signal, select, time
 
 
 # Important output
@@ -25,58 +25,61 @@ class GethMarshal(object):
             # TODO: interface with the javascript console
             #console
         ]
-        self.thread = None
 
-        self.gethBuffer = []
+        self.process = None
+        self.open = [False, False]
         self.running = False
-        self.stopRequest = threading.Event()
+        
 
     def runGeth(self):
-        # run the process in another thread
-        #print 'Starting '+' '.join(self.command)+'...'
-        self.thread = self.GethThread(self.command)
-        self.thread.start()
-        self.thread.running = True
-
-
-    def isRunning(self):
-        if self.thread is None:
-            return False
-        return self.thread.running
-       
+        self.process = Popen(self.command, stderr=PIPE, stdout=PIPE)
+        self.open = [True, True]
+        self.running = True
 
 
     def getOutputLines(self):
-        if self.thread is None:
-            raise ValueError('Process has not been started yet')
         lines = []
-        self.thread.outputLock.acquire()
-        while len(self.thread.output) > 0:
-            line = self.thread.output.pop(0).strip()
-            lines.append(line)
-        self.thread.outputLock.release()
+
+        # TODO: check if output is '' from either stream and
+        # when both have closed process is dead
+
+        reads = [self.process.stderr.fileno(), self.process.stdout.fileno()]
+        ret = select.select(reads, [], [], 0.5)
+        if self.process.stderr.fileno() in ret[0]:
+            line = self.process.stderr.readline()
+            lines.append(self.processLine(line.strip()))
+        if self.process.stdout.fileno() in ret[0]:
+            line = self.process.stdout.readline()
+            lines.append(self.processLine(line.strip()))
+
 
         return lines
+
+    def isRunning(self):
+        return self.running
 
     def getOutput(self):
         lines = self.getOutputLines()
 
         retLines = []
         for line in lines:
-            stripped = filter(lambda a: a != '', line.split(' '))
-            if self.isStartMiningOperation(stripped):
-                retLines.append(' '.join(stripped))
-            elif self.isMiningAbortedLine(stripped):
-                retLines.append(' '.join(stripped))
-            elif self.isProtocolVersionLine(stripped):
-            	retLines.append(' '.join(stripped))
-            elif self.isBlockChainVersionLine(stripped):
-            	retLines.append(' '.join(stripped))
-            elif self.isStartingServerLine(stripped):
-            	retLines.append(' '.join(stripped))
-            else:
-                if self.config['verbose'] or self.config['debug']:
+            try:
+                stripped = filter(lambda a: a != '', line.split(' '))
+                if self.isStartMiningOperation(stripped):
                     retLines.append(' '.join(stripped))
+                elif self.isMiningAbortedLine(stripped):
+                    retLines.append(' '.join(stripped))
+                elif self.isProtocolVersionLine(stripped):
+                	retLines.append(' '.join(stripped))
+                elif self.isBlockChainVersionLine(stripped):
+                	retLines.append(' '.join(stripped))
+                elif self.isStartingServerLine(stripped):
+                	retLines.append(' '.join(stripped))
+                else:
+                    if self.config['verbose'] or self.config['debug']:
+                        retLines.append(' '.join(stripped))
+            except IndexError:
+                retLines.append(' '.join(stripped))
 
         return retLines
 
@@ -104,50 +107,12 @@ class GethMarshal(object):
         
 
     def killGeth(self):
-        self.thread.stopRequest.set()
-        self.thread.process.wait()
-
-    class GethThread(threading.Thread):
-        def __init__(self, command):
-            threading.Thread.__init__(self)
-            self.command = command
-            self.stopRequest = threading.Event()
-            self.output = []
-            self.outputLock = threading.Lock()
-            self.running = False
-
-
+        if self.process is not None:
+            self.process.wait()
         
-        def run(self):
-            try:
-                self.process = Popen(self.command, stderr=PIPE)
-                self.running = True
-            except Exception:
-                self.running = False
-                return
 
-            while not self.stopRequest.is_set():
-                line = self.process.stderr.readline()
-                if line == '':
-                    print 'Geth has died, exiting...'
-                    self.running = False
-                    self.join()
-                    break                    
-                line = self.processLine(line.strip())
-
-
-                self.outputLock.acquire()
-                self.output.append(line)
-                self.outputLock.release()
-            
-        def join(self):
-            if self.running:
-                self.running = False
-                print 'Killing Geth...'
-                self.process.wait()
-
-        def processLine(self, line):
-            return line[line.find(']')+2:]
+    def processLine(self, line):
+        return line[line.find(']')+2:]
                 
 
 
@@ -156,14 +121,17 @@ class GethMarshal(object):
 
 if __name__ == '__main__':
     config = {
-        'geth-server': "/home/cameron/go-ethereum/build/bin/geth"
+        'geth-server': "/home/cameron/go-ethereum/build/bin/geth",
+        'verbose': False,
+        'debug': False
     }
     gm = GethMarshal(config)
     try:
         gm.runGeth()
+        time.sleep(1)
         while gm.isRunning():
-            line = gm.getOutputLine()
-            if line != None:
+            linearray = gm.getOutput()
+            for line in linearray:
                 print line
     except KeyboardInterrupt:
         print 'Received interrupt, stopping geth...'

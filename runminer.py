@@ -47,9 +47,8 @@ def printUsage():
     print '\t    \t\t(Without this flag ethminer will use all available CPU/GPU threads'
     print '   --geth=    indicates the location of the geth binary'
     print '   --ethminer=       indicates the location of the ethminer binary'
-    print '\nCreated by Cameron Diver  (cameron.diver94@gmail.com)'
+    print '\n\nCreated by Cameron Diver  (cameron.diver94@gmail.com)'
     print '    and   Joseph Roberts  (j.baldwin.roberts@gmail.com)'
-
 def getOptions(args):
     config = {}
 

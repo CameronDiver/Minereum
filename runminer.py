@@ -98,6 +98,7 @@ if config['run-server']:
     geth = GethMarshal(config)
     log.log('info', "Running command '%s'" % ' '.join(geth.command))
     geth.runGeth()
+    time.sleep(1)
 
 
 ethminer = EthminerMarshal(config)
@@ -111,8 +112,8 @@ try:
     ethminer.start()
     time.sleep(1)
     while True:
-        
         lines = ethminer.getOutput()
+        
         for line in lines:
             
             strLine = line[1]
@@ -121,21 +122,22 @@ try:
             else:
                 log.logDynamic('ethminer', line[0], line[1])
 
+        
         if config['run-server']:
-            lines = geth.getOutput()
+            gethLines = geth.getOutput()
             
-            for line in lines:
+            for line in gethLines:
                 log.log('geth', line)
 
-
+        
         if (time.time() - timeCheck) > config['speed-refresh']:
             if ethminer.gotHPS:
                 log.logDynamic('ethminer', 'SPEEDLINE', ethminer.getSpeedOutput())
             timeCheck = time.time()
 
 except KeyboardInterrupt:
-    print '\nReceived keyboard interrupt, stopping processes...'
-    print 'Please wait to avoid ethereum directory corruption.'
+    log.log('info','Received keyboard interrupt, stopping processes...')
+    log.log('info', 'Please wait to avoid ethereum directory corruption.')
 except:
     print traceback.format_exc()
 

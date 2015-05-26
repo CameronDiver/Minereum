@@ -1,4 +1,5 @@
 from subprocess import Popen, PIPE
+from datetime import datetime
 import os, signal, select, time
 
 
@@ -34,7 +35,7 @@ class GethMarshal(object):
     def runGeth(self):
         self.process = Popen(self.command, stderr=PIPE, stdout=PIPE)
         f = open('gethlog.txt', 'w')
-        f.write('Geth Log\n')
+        f.write('Geth Log ' + str(datetime.now()) + '\n')
         f.close()
         self.open = [True, True]
         self.running = True
@@ -63,40 +64,39 @@ class GethMarshal(object):
     def getOutput(self):
         lines = self.getOutputLines()
         retLines = []
-        f = open('gethlog.txt', 'a')
-        for line in lines:
-            try:
-                stripped = filter(lambda a: a != '', line.split(' '))
-                if self.isStartMiningOperation(stripped):
-                    retLines.append(' '.join(stripped))
-                elif self.isMiningAbortedLine(stripped):
-                    retLines.append(' '.join(stripped))
-                elif self.isProtocolVersionLine(stripped):
-                	retLines.append(' '.join(stripped))
-                elif self.isBlockChainVersionLine(stripped):
-                	retLines.append(' '.join(stripped))
-                elif self.isStartingServerLine(stripped):
-                	retLines.append(' '.join(stripped))
-                elif self.isStoppingServerLine(stripped):
-                	retLines.append(' '.join(stripped))
-                elif self.isDatabaseCloseLine(stripped):
-                	retLines.append(' '.join(stripped))
-                elif self.isWaitingForNetworkSyncLine(stripped):
-                	retLines.append(' '.join(stripped))
-                elif self.isImportingBlocksLine(stripped):
-                	retLines.append(' '.join(stripped))
-                elif self.isBlockSyncStartedLine(stripped):
-                	retLines.append(' '.join(stripped))
-                elif self.config['verbose'] or self.config['debug']:
-                        retLines.append(' '.join(stripped))
-            except IndexError:
-                retLines.append(' '.join(stripped))
-                
-            f.write(line + '\n')
-            f.close()
+        with open('gethlog.txt', 'a') as f:
+            for line in lines:
+                try:
+                    stripped = filter(lambda a: a != '', line.split(' '))
+                    if self.isStartMiningOperation(stripped):
+                        retLines.append(('/NETWORKSYNCLINE',' '.join(stripped)))
+                    elif self.isMiningAbortedLine(stripped):
+                        retLines.append(('',' '.join(stripped)))
+                    elif self.isProtocolVersionLine(stripped):
+                    	retLines.append(('',' '.join(stripped)))
+                    elif self.isBlockChainVersionLine(stripped):
+                    	retLines.append(('',' '.join(stripped)))
+                    elif self.isStartingServerLine(stripped):
+                    	retLines.append(('',' '.join(stripped)))
+                    elif self.isStoppingServerLine(stripped):
+                    	retLines.append(('',' '.join(stripped)))
+                    elif self.isDatabaseCloseLine(stripped):
+                    	retLines.append(('',' '.join(stripped)))
+                    elif self.isWaitingForNetworkSyncLine(stripped):
+                    	retLines.append(('NETWORKSYNCLINE',' '.join(stripped)))
+                    elif self.isImportingBlocksLine(stripped):
+                    	retLines.append(('',' '.join(stripped)))
+                    elif self.isBlockSyncStartedLine(stripped):
+                    	retLines.append(('',' '.join(stripped)))
+                    elif self.config['verbose'] or self.config['debug']:
+                            retLines.append((' '.join(stripped)))
+                except IndexError:
+                    retLines.append((' '.join(stripped)))
+
+                f.write(line + '\n')
+                f.close()
 
         return retLines
-
 
 
     def isStartMiningOperation(self, stripped):

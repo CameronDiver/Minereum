@@ -129,7 +129,7 @@ try:
             for line in gethLines:
                 strLine = line[1]
                 if line[0] == '':
-                    log.log('geth', line)
+                    log.log('geth', line[1])
                 else:
                     log.logDynamic('geth', line[0], line[1])
 

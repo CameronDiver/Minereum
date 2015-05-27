@@ -4,11 +4,18 @@ from subprocess import Popen, PIPE
 import sys, time, os, signal, numpy
 import getopt
 import traceback
+
 from logger import Logger
 from emmarshal import EthminerMarshal
 from gethmarshal import GethMarshal
+from inputthread import InputThread
+from gethjson import GethJSON
 
 # hammer hexcode 01f528 Mined block block number [maybe not that order]
+
+class StopException(Exception):
+    def __init__(self):
+        pass
 
 SPEED_MAX_SAMPLE_SIZE = 100
 
@@ -22,7 +29,8 @@ DEFAULTS = {
     'hps-sample-size': 10,
     'debug': False,
     'speed-refresh': 2,
-    'threads': None # Nothing set means don't pass anything to ethminer which is full power
+    'threads': None, # Nothing set means don't pass anything to ethminer which is full power
+    'geth-rpc':('http://localhost', 8545)
 }
 
 OPTIONS = (
@@ -88,11 +96,38 @@ def getOptions(args):
 
     return config
 
+def turnEchoOff():
+    Popen(['stty', '-echo'])
+
+def turnEchoOn():
+    Popen(['stty', 'echo'])
+
+def printInputChars(log):
+    log.log('info', 'Supported keyboard shortcuts:')
+    log.log('info', 'h)  Show this help.\tq)   Quit')
+    log.log('info', 'a)  Show accounts')
+
+def handleInput(log, char, json):
+    if char == 'q':
+        raise KeyboardInterrupt
+    elif char == 'h':
+        printInputChars(log)
+    elif char == 'a':
+        accs = json.getAccounts()
+        log.log('info', 'Registered Accounts:')
+        for idx, acc in enumerate(accs):
+            log.log('info', str(idx+1)+'. '+str(acc))
+
+    
+
+
 config = getOptions(sys.argv[1:])
 
 # Start the logging class before the process so it has somewhere to print to
 log = Logger()
 
+inputThread = InputThread()
+inputThread.start()
 
 if config['run-server']:
     geth = GethMarshal(config)
@@ -100,16 +135,19 @@ if config['run-server']:
     geth.runGeth()
     time.sleep(1)
 
+log.log('info', 'Connecting to geth JSON...')
+json= GethJSON(config['geth-rpc'])
 
 ethminer = EthminerMarshal(config)
-
-lastOutputTime = time.time()
 
 timeCheck = time.time()
 
 try:
+    turnEchoOff()
     log.log('info', "Running command '%s'" % ' '.join(ethminer.command))
+    
     ethminer.start()
+    
     time.sleep(1)
     while True:
         lines = ethminer.getOutput()
@@ -134,19 +172,28 @@ try:
                     log.logDynamic('geth', line[0], line[1])
 
         
+        if inputThread.hasChar():
+            handleInput(log, inputThread.getChar(), json)
+
         if (time.time() - timeCheck) > config['speed-refresh']:
             if ethminer.gotHPS:
                 log.logDynamic('ethminer', 'SPEEDLINE', ethminer.getSpeedOutput())
             timeCheck = time.time()
 
 except KeyboardInterrupt:
-    log.log('info','Received keyboard interrupt, stopping processes...')
+    log.log('info','Received quit shortcut, stopping processes...')
     log.log('info', 'Please wait to avoid ethereum directory corruption.')
-except:
-    print traceback.format_exc()
 
 finally:
+    
+    inputThread.stopEvent.set()
+    
+    ethminer.process.terminate()
+    ethminer.stop()
+    
     if config['run-server']:
         geth.killGeth()
-    ethminer.stop()
+
+    turnEchoOn()
+    sys.exit()
     

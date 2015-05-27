@@ -44,13 +44,10 @@ class GethJSON:
 
 
 
-
 if __name__ == '__main__':
     gethJSON = GethJSON(('http://localhost', 8545))
-    print "Accounts:"
-    accs = gethJSON.getAccounts()
-    for acc in accs:
-        print '\t'+str(acc)+'   '+str(gethJSON.weiToEther(gethJSON.getBalance(acc)))+" Eth"
-    #gethJSON.weiToEther(gethJSON.getBalance(accs[0]))
-    #print gethJSON.getWork()
+
+
+    
+
     

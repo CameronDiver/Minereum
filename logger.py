@@ -42,36 +42,27 @@ class Logger(object):
             'info': 'bold-green'
         }
 
-        self.gotDynamic = False
-        self.currentDynamic = ('', '', '')
+        self.dynamicLine = False
+        self.dynamic = ('', '', '')
 
-        self.dynamics = []
-
-        self.termSize = self.getTermSize()
         self.offsetSize = self.getMaxSourceLength()
 
         self.offsetWithoutSource = len(datetime.now().strftime('%H:%M')) + 1
 
         self.offset = self.offsetWithoutSource + self.offsetSize
-    
-    def getTermSize(self):
-        p = Popen(['tput', 'lines'], stdout=PIPE)
-        output = p.communicate()
-        p.wait()
-        
-        lines = int(output[0].strip())
 
-        p = Popen(['tput', 'cols'], stdout=PIPE)
-        output = p.communicate()
-        p.wait()
-        
-        cols = int(output[0].strip())
-
-        return (lines, cols)
+        self.termLineLength = self.getTermLineLength()
 
     def getMaxSourceLength(self):
         a = [len(source) for source in self.sourceColours]
         return max(a)
+
+    def getTermLineLength(self):
+        p = Popen(['tput', 'cols'], stdout=PIPE)
+        output = p.communicate()
+        p.wait()
+
+        return int(output[0].strip())
 
 
     def addSrcColour(self, source, colourName):
@@ -79,125 +70,66 @@ class Logger(object):
         self.sourceColours[source] = colourName
 
     def log(self, source, message):
-        # TODO: correct offset, not \t
-        
-        if self.gotDynamic:
-            # clear the line to get rid of the dynamic part
-            self.clearLine()
-
-            # print the message
+        if self.dynamicLine is False:
             self.internalLog(source, message)
-            
-            #print ' '
-            # print the dynamic again
-            self.internalLogDyn(self.currentDynamic[0], self.currentDynamic[2])
         else:
+            self.clearLine()
             self.internalLog(source, message)
-        
+            self.internalLogDyn(self.dynamic[1], self.dynamic[2])
+
 
     def clearLine(self):
-        call(['tput', 'el1'])
-        # call(['tput', 'cuu1'])
-        self.moveCursorBack(self.getLastDynamicLength())
-
-    def getLastDynamicLength(self):
-        if self.gotDynamic:
-            old = '[%s%s%s %s %s%s]\t%s' % (
-                    self.colours[self.sourceColours['time']],
-                    datetime.now().strftime('%H:%M'),
-                    self.colours['end'],
-                    self.colours[self.sourceColours[self.currentDynamic[0]]],
-                    self.currentDynamic[0],
-                    self.colours['end'],
-                    self.currentDynamic[2]
-                )
-            return len(old)
-        else:
-            return 0
-
-    def moveCursorBack(self, n):
-        call(['tput', 'cub', str(n)])
-
-    def savePlace(self):
-        pass
-        #call(['tput', 'sc'])
-
-    def restorePlace(self):
-        pass
-        #call(['tput', 'rc'])
-
+        # clear the current line
+        print '\r'+' '*self.termLineLength+'\r'
+        
     def internalLog(self, source, message):
-        print '[%s%s%s %s %s%s]%s%s' % (
-                self.colours[self.sourceColours['time']],
-                datetime.now().strftime('%H:%M'),
-                self.colours['end'],
-                self.colours[self.sourceColours[source]],
-                source,
-                self.colours['end'],
-                ' '*(self.offsetSize - len(source) + 3),
-                message
-            )
+        print '[%s%s%s %s %s%s] %s' % (
+            self.colours[self.sourceColours['time']],
+            datetime.now().strftime('%H:%M'),
+            self.colours['end'],
+            self.colours[self.sourceColours[source]],
+            source,
+            self.colours['end'],
+            message)
+        
     def internalLogDyn(self, source, message):
-
-        sys.stdout.write('[%s%s%s %s %s%s]%s%s' % (
-                self.colours[self.sourceColours['time']],
-                datetime.now().strftime('%H:%M'),
-                self.colours['end'],
-                self.colours[self.sourceColours[source]],
-                source,
-                self.colours['end'],
-                ' '*(self.offsetSize - len(self.currentDynamic[0]) + 3),
-                message
-            ))
-        sys.stdout.flush()
-
+        sys.stdout.write('[%s%s%s %s %s%s] %s' % (
+            self.colours[self.sourceColours['time']],
+            datetime.now().strftime('%H:%M'),
+            self.colours['end'],
+            self.colours[self.sourceColours[source]],
+            source,
+            self.colours['end'],
+            message))
+        
     def logDynamic(self, source, dynId, message):
-
-        # if(dynId[0] == '/'):
-        #     for idx, dyn in self.dynamics:
-        #         if dynId[1:] == dyn[1]:
-        #             del self.dynamics[idx]
-        #             break
-
-        # check if its ending dynamic
-        if dynId[0] == '/':
-            if dynId[1:] == self.currentDynamic[1]:
-                if message == '':
-                    print ''
-                else:
-                    self.clearLine()
-                    self.gotDynamic = False
-                    self.internalLog(source, message)
+        if self.dynamicLine:
+            if dynId == self.dynamic[0]:
+                # standard case, dynamic line updating itself
+                self.clearLine()
+                self.internalLogDyn(source, message)
+                self.dynamic = (dynId, source, message)
             else:
-                if message == '':
-                    return
-                if self.gotDynamic:
+                if dynId[0] != '/':
+                    # Start of a new dynamic line
+                    # save the current one by printing a newline
                     print ''
-                self.internalLog(source, message)
-            return
-
-
-        if self.gotDynamic:
-            
-            if not self.currentDynamic[1] == dynId:
-                # Commenting out this part and testing another, seeing if rather than
-                # it being rigid and need dynamic outputs to be ended, it just switches to the other
-                # didnt work, TODO: try this properly
-                self.log('ERROR', "Internal error: DynamicOutput code error. Current: %s, given: %s" % (self.currentDynamic[1], dynId))
-                sys.exit()
-                # print a newline
-                print ' '
-
-            # clear the line
-            self.clearLine()
-            
-            self.currentDynamic = (source, dynId, message)
-            self.internalLogDyn(source, message)
+                    self.dynamic = (dynId, source, message)
+                    self.internalLogDyn(source, message)
+                else:
+                    # the end of a dynamic line
+                    if dynId[1:] == dynId:
+                        self.dynamicLine = False
+                        self.dynamic = ('', '', '')
+                        self.clearLine()
+                        self.internalLog(source, message)
+                    else:
+                        # another end coming when there is a new one opem
+                        # just display it normally
+                        self.clearLine()
+                        self.interalLog(source, message)
+                        self.interalLogDyn(self.dynamic[1], self.dynamic[2])
         else:
-            self.gotDynamic = True
-            self.currentDynamic = (source, dynId, message)
             self.internalLogDyn(source, message)
-
-    def stopDynamic(self):
-        self.gotDynamic = False
+            self.dynamic = (dynId, source, message)
             

@@ -133,7 +133,7 @@ class GethMarshal(object):
 
     def isImportingBlocksLine(self, stripped):
         #  imported 256 block(s)
-        return stripped[0] == "imported" and stripped[1] == "256"
+        return stripped[0] == "imported" and stripped[2] == "block(s)"
 
     def isBlockSyncStartedLine(self, stripped):
         #  Block synchronisation started

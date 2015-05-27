@@ -43,7 +43,8 @@ class EthminerMarshal(object):
 
         self.state = {
             'connection-problem': False,
-            'DAG-loaded': False
+            'DAG-loaded': False,
+            'getting-work-package': False
         }
 
         ############# REMOVE AFTER DEBUGGING
@@ -84,7 +85,9 @@ class EthminerMarshal(object):
                         ret.append(('/CONNECTLINE', 'Connected.'))
                         self.state['connection-problem'] = False
                 elif self.isWorkPackageLine(stripped[2:]):
-                    pass
+                    if not self.state['getting-work-package']:
+                        ret.append(('', ' '.join(stripped[2:])))
+                        self.state['getting-work-package'] = True
                 elif self.isMiningLine(stripped[2:]):
                     self.handleHPS(float(stripped[7]))
                     #ret.append(('SPEEDLINE', self.getSpeedOutput()))

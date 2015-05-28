@@ -34,9 +34,9 @@ class GethMarshal(object):
 
     def runGeth(self):
         self.process = Popen(self.command, stderr=PIPE, stdout=PIPE)
-        f = open('gethlog.txt', 'w')
-        f.write('Geth Log ' + str(datetime.now()) + '\n')
-        f.close()
+        self.f = open('gethlog.txt', 'w')
+        self.f.write('Geth Log ' + str(datetime.now()) + '\n')
+        
         self.open = [True, True]
         self.running = True
 
@@ -63,38 +63,45 @@ class GethMarshal(object):
 
     def getOutput(self):
         lines = self.getOutputLines()
+        
         retLines = []
-        with open('gethlog.txt', 'a') as f:
-            for line in lines:
-                try:
-                    stripped = filter(lambda a: a != '', line.split(' '))
-                    if self.isStartMiningOperation(stripped):
-                        retLines.append(('/NETWORKSYNCLINE',' '.join(stripped)))
-                    elif self.isMiningAbortedLine(stripped):
-                        retLines.append(('',' '.join(stripped)))
-                    elif self.isProtocolVersionLine(stripped):
-                    	retLines.append(('',' '.join(stripped)))
-                    elif self.isBlockChainVersionLine(stripped):
-                    	retLines.append(('',' '.join(stripped)))
-                    elif self.isStartingServerLine(stripped):
-                    	retLines.append(('',' '.join(stripped)))
-                    elif self.isStoppingServerLine(stripped):
-                    	retLines.append(('',' '.join(stripped)))
-                    elif self.isDatabaseCloseLine(stripped):
-                    	retLines.append(('',' '.join(stripped)))
-                    elif self.isWaitingForNetworkSyncLine(stripped):
-                    	retLines.append(('NETWORKSYNCLINE',' '.join(stripped)))
-                    elif self.isImportingBlocksLine(stripped):
-                    	retLines.append(('',' '.join(stripped)))
-                    elif self.isBlockSyncStartedLine(stripped):
-                    	retLines.append(('',' '.join(stripped)))
-                    elif self.config['verbose'] or self.config['debug']:
-                            retLines.append((' '.join(stripped)))
-                except IndexError:
-                    retLines.append((' '.join(stripped)))
+        for line in lines:
+            try:
+                stripped = filter(lambda a: a != '', line.split(' '))
+                if self.isStartMiningOperation(stripped):
+                    retLines.append(('/NETWORKSYNCLINE',' '.join(stripped)))
+                elif self.isMiningAbortedLine(stripped):
+                    retLines.append(('',' '.join(stripped)))
+                elif self.isProtocolVersionLine(stripped):
+                	retLines.append(('',' '.join(stripped)))
+                elif self.isBlockChainVersionLine(stripped):
+                	retLines.append(('',' '.join(stripped)))
+                elif self.isStartingServerLine(stripped):
+                	retLines.append(('',' '.join(stripped)))
+                elif self.isStoppingServerLine(stripped):
+                	retLines.append(('',' '.join(stripped)))
+                elif self.isDatabaseCloseLine(stripped):
+                	retLines.append(('',' '.join(stripped)))
+                elif self.isWaitingForNetworkSyncLine(stripped):
+                	retLines.append(('NETWORKSYNCLINE',' '.join(stripped)))
+                    #retLines.append(('', ' '.join(stripped)))
+                elif self.isImportingBlocksLine(stripped):
+                	pass
+                    #retLines.append(('',' '.join(stripped)))
+                elif self.isBlockSyncStartedLine(stripped):
+                	retLines.append(('',' '.join(stripped)))
 
-                f.write(line + '\n')
-                f.close()
+                elif self.isBlockchainError(stripped):
+                    self.isRunning = False
+
+                elif self.config['verbose'] or self.config['debug']:
+                    retLines.append(('', ' '.join(stripped)))
+            except IndexError:
+                if ' '.join(stripped).strip() != '':
+                    retLines.append(('', ' '.join(stripped)))
+
+            self.f.write(line + '\n')
+            
 
         return retLines
 
@@ -138,10 +145,15 @@ class GethMarshal(object):
     def isBlockSyncStartedLine(self, stripped):
         #  Block synchronisation started
         return stripped[0] == "Block" and stripped[1] == "synchronisation" and stripped[2] == "started"
+
+    def isBlockchainError(self, stripped):
+        return stripped[1] == "blockchain" and stripped[2] == "db" and stripped[3] == "err:"
         
 
     def killGeth(self):
         if self.process is not None:
+            self.f.close()
+            self.process.kill()
             self.process.wait()
         
 

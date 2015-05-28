@@ -84,6 +84,14 @@ class EthminerMarshal(object):
                     if self.state['connection-problem']:
                         ret.append(('/CONNECTLINE', 'Connected.'))
                         self.state['connection-problem'] = False
+                elif self.isGrabbingDAGLine(stripped[2:]):
+                    ret.append(('', ' '.join(stripped[2:])))
+                    self.state['connection-problem'] = False
+                elif self.isLoadingFullDAGLine(stripped[2:]):
+                    if self.state['connection-problem']:
+                        ret.append(('/CONNECTLINE', 'Connected.'))
+                        self.state['connection-problem'] = False
+
                 elif self.isWorkPackageLine(stripped[2:]):
                     if not self.state['getting-work-package']:
                         ret.append(('', ' '.join(stripped[2:])))
@@ -93,19 +101,19 @@ class EthminerMarshal(object):
                     #ret.append(('SPEEDLINE', self.getSpeedOutput()))
                 elif self.isDAGLoadedLine(stripped[2:]):
                     ret.append(('/DAGLINE', ' '.join(stripped[2:])))
-                    #self.state['DAG-loaded'] = True
-                elif self.isWorkPackageConfirmLine(stripped[2:]):
-                    ret.append(('/DAGLINE', ''))#.join(stripped[2:])))
                     self.state['DAG-loaded'] = True
-                elif stripped[0] == 'DAG':
-                    if not self.state['DAG-loaded']:
-                        ret.append(('DAGLINE', ' '.join(stripped[2:])))
+                elif self.isWorkPackageConfirmLine(stripped[2:]):
+                    pass
+                    #ret.append(('/DAGLINE', ' '.join(stripped[2:])))
+                    #self.state['DAG-loaded'] = True
+                elif self.isGeneratingDAGLine(stripped[2:]):
+                    ret.append(('DAGLINE', ' '.join(stripped[2:])))
                 elif self.isInfoLine(stripped):
                     if self.config['verbose'] or self.config['debug']:
                         ret.append(('', ' '.join(stripped[2:])))   
                 else:
                     if self.config['verbose'] or self.config['debug']:
-                        ret.append(('', ' '.join(stripped)))   
+                        ret.append(('', ' '.join(stripped[2:])))   
 
             except IndexError:
                 # TODO: implement debug switch
@@ -124,8 +132,12 @@ class EthminerMarshal(object):
         self.speedList[self.speedListIdx] = hps
         self.speedListIdx += 1
 
+
+    def isLoadingFullDAGLine(self, stripped):
+        return stripped[0] == "Loading" and stripped[1] == "full" and stripped[2] == "DAG"
+
     def isGrabbingDAGLine(self, stripped):
-        return stripped[0] == 'Grabbing' and stripped[1] == "DAG" and stipped[2] == "for"
+        return stripped[0] == 'Grabbing' and stripped[1] == "DAG" and stripped[2] == "for"
 
     def isDAGLoadedLine(self, stripped):
         return stripped[0] == 'Full' and stripped[1] == 'DAG' and stripped[2] == 'loaded'
@@ -145,6 +157,9 @@ class EthminerMarshal(object):
     def isLoadingFromHashLibLine(self, stripped):
         return stripped[0] == 'Loading' and stripped[2] == 'libethash...'
 
+    def isGeneratingDAGLine(self, stripped):
+        return stripped[0] == 'Generating' and stripped[1] == 'DAG' and stripped[2] == 'file.'
+
     def readStream(self):
         lines = []
         reads = [self.process.stdout.fileno(), self.process.stderr.fileno()]
@@ -159,14 +174,15 @@ class EthminerMarshal(object):
             #line = self.process.stderr.readline()    
             line = os.read(self.process.stderr.fileno(), 2048)
         
-            lines.append(line)
+            lines += line.split('\n')
 
         
 
         if self.process.stdout.fileno() in ret[0]:
             #line = self.process.stdout.readline()
             line = os.read(self.process.stdout.fileno(), 2048)
-            lines.append(line)
+            
+            lines += line.split('\n')
         
         return lines
 
@@ -185,8 +201,13 @@ class EthminerMarshal(object):
 
     def getSpeedOutput(self):
         if self.gotRollingValues:
+            am = numpy.mean(self.speedList)
+            if am == 0.0:
+                return None
             return 'Average Speed: %s'% self.readableHash(numpy.mean(self.speedList))
         else:
+            if self.lastHPS == 0.0:
+                return None
             return 'Current Speed: %s\t[Waiting for more results]' % self.readableHash(self.lastHPS)
 
 

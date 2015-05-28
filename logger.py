@@ -80,7 +80,7 @@ class Logger(object):
 
     def clearLine(self):
         # clear the current line
-        print '\r'+' '*self.termLineLength+'\r'
+        print '\r'+' '*(self.termLineLength-1)+'\r',
         
     def internalLog(self, source, message):
         print '[%s%s%s %s %s%s] %s' % (
@@ -93,18 +93,20 @@ class Logger(object):
             message)
         
     def internalLogDyn(self, source, message):
-        sys.stdout.write('[%s%s%s %s %s%s] %s' % (
+        print '[%s%s%s %s %s%s] %s' % (
             self.colours[self.sourceColours['time']],
             datetime.now().strftime('%H:%M'),
             self.colours['end'],
             self.colours[self.sourceColours[source]],
             source,
             self.colours['end'],
-            message))
+            message),
+        sys.stdout.flush()
         
     def logDynamic(self, source, dynId, message):
         if self.dynamicLine:
             if dynId == self.dynamic[0]:
+                
                 # standard case, dynamic line updating itself
                 self.clearLine()
                 self.internalLogDyn(source, message)
@@ -113,12 +115,13 @@ class Logger(object):
                 if dynId[0] != '/':
                     # Start of a new dynamic line
                     # save the current one by printing a newline
-                    print ''
-                    self.dynamic = (dynId, source, message)
-                    self.internalLogDyn(source, message)
+                    if message != '':
+                        self.dynamic = (dynId, source, message)
+                        print ''
+                        self.internalLogDyn(source, message)
                 else:
                     # the end of a dynamic line
-                    if dynId[1:] == dynId:
+                    if dynId[1:] == self.dynamic[0]:
                         self.dynamicLine = False
                         self.dynamic = ('', '', '')
                         self.clearLine()
@@ -127,9 +130,10 @@ class Logger(object):
                         # another end coming when there is a new one opem
                         # just display it normally
                         self.clearLine()
-                        self.interalLog(source, message)
-                        self.interalLogDyn(self.dynamic[1], self.dynamic[2])
+                        self.internalLog(source, message)
+                        self.internalLogDyn(self.dynamic[1], self.dynamic[2])
         else:
             self.internalLogDyn(source, message)
             self.dynamic = (dynId, source, message)
+            self.dynamicLine = True
             

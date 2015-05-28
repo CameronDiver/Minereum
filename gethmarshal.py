@@ -30,6 +30,8 @@ class GethMarshal(object):
         self.process = None
         self.open = [False, False]
         self.running = False
+        self.blockSyncStarted = False
+        self.mining = False
         
 
     def runGeth(self):
@@ -69,8 +71,10 @@ class GethMarshal(object):
             try:
                 stripped = filter(lambda a: a != '', line.split(' '))
                 if self.isStartMiningOperation(stripped):
-                    retLines.append(('/NETWORKSYNCLINE',' '.join(stripped)))
+                    self.mining = True
+                    retLines.append(('',' '.join(stripped)))
                 elif self.isMiningAbortedLine(stripped):
+                    self.mining = False
                     retLines.append(('',' '.join(stripped)))
                 elif self.isProtocolVersionLine(stripped):
                 	retLines.append(('',' '.join(stripped)))
@@ -82,14 +86,15 @@ class GethMarshal(object):
                 	retLines.append(('',' '.join(stripped)))
                 elif self.isDatabaseCloseLine(stripped):
                 	retLines.append(('',' '.join(stripped)))
-                elif self.isWaitingForNetworkSyncLine(stripped):
-                	retLines.append(('NETWORKSYNCLINE',' '.join(stripped)))
+                #elif self.isWaitingForNetworkSyncLine(stripped):
+                	#retLines.append(('NETWORKSYNCLINE',' '.join(stripped)))
                     #retLines.append(('', ' '.join(stripped)))
                 elif self.isImportingBlocksLine(stripped):
                 	pass
                     #retLines.append(('',' '.join(stripped)))
                 elif self.isBlockSyncStartedLine(stripped):
-                	retLines.append(('',' '.join(stripped)))
+                    self.blockSyncStarted = True
+                    retLines.append(('',' '.join(stripped)))
 
                 elif self.isBlockchainError(stripped):
                     self.isRunning = False
@@ -108,11 +113,11 @@ class GethMarshal(object):
 
     def isStartMiningOperation(self, stripped):
         # Starting mining operation (CPU=0 TOT=1)
-        return stripped[0] == 'Starting' and stripped[1] == 'mining' and stripped[2] == 'operation'
+        return stripped[0] == 'Starting' and stripped[1] == 'mining' and stripped[2] == 'operation' and self.blockSyncStarted == True and self.mining == False
 
     def isMiningAbortedLine(self, stripped):
         #  Mining operation aborted
-        return stripped[0] == "Mining" and stripped[1] == "operation" and stripped[2] == 'aborted'
+        return stripped[0] == "Mining" and stripped[1] == "operation" and stripped[2] == 'aborted' and self.mining == True
 
     def isProtocolVersionLine(self, stripped):
     	# Protocol Version: 60, Network Id: 0

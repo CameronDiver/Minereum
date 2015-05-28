@@ -17,10 +17,6 @@ class StopException(Exception):
     def __init__(self):
         pass
 
-class GethDiedException(Exception):
-    def __init__(self):
-        pass
-
 SPEED_MAX_SAMPLE_SIZE = 100
 
 DEFAULTS = {
@@ -77,6 +73,7 @@ def getOptions(args):
         elif opt == '-M':
             config['benchmark'] = True
             config['verbose'] = True
+            config['run-server'] = False
         elif opt == '-s':
             config['run-server'] = False
         elif opt == '-v':
@@ -109,9 +106,9 @@ def turnEchoOn():
 def printInputChars(log):
     log.log('info', 'Supported keyboard shortcuts:')
     log.log('info', 'h)  Show this help.\tq)   Quit')
-    log.log('info', 'a)  Show accounts.\tb)   Show balance')
+    log.log('info', 'a)  Show accounts')
 
-def handleInput(log, char, json, inputThread):
+def handleInput(log, char, json):
     if char == 'q':
         raise KeyboardInterrupt
     elif char == 'h':
@@ -120,21 +117,7 @@ def handleInput(log, char, json, inputThread):
         accs = json.getAccounts()
         log.log('info', 'Registered Accounts:')
         for idx, acc in enumerate(accs):
-            log.log('info', '['+str(idx+1)+'] '+str(acc))
-    elif char == 'b':
-        log.log('info', 'Please enter the id of the account (from the accounts command)...')
-        while not inputThread.hasChar():
-            pass
-        c = inputThread.getChar()
-        try:
-            i = int(c)
-            accs = json.getAccounts()
-            bal  = json.weiToEther(json.getBalance(accs[i-1]))
-            log.log('info', 'Account %i has a balance of %f Eth' % (i, bal))
-        except:
-            log.log('info', 'Invalid account ID')
-
-
+            log.log('info', str(idx+1)+'. '+str(acc))
 
     
 
@@ -174,16 +157,12 @@ try:
             
             strLine = line[1]
             if line[0] == '':
-                #print 'here1', strLine
                 log.log('ethminer', strLine.strip())
-            else:
-                #print 'here2', strLine
-                log.logDynamic('ethminer', line[0], strLine.strip())
+            #else:
+                #log.logDynamic('ethminer', line[0], line[1])
 
         
         if config['run-server']:
-            if not geth.isRunning:
-                raise GethDiedException()
             gethLines = geth.getOutput()
             
             for line in gethLines:
@@ -195,24 +174,16 @@ try:
 
         
         if inputThread.hasChar():
-            handleInput(log, inputThread.getChar(), json, inputThread)
+            handleInput(log, inputThread.getChar(), json)
 
-        if (time.time() - timeCheck) > config['speed-refresh']:
-            if ethminer.gotHPS:
-                sp = ethminer.getSpeedOutput()
-                if sp is not None:
-                    log.logDynamic('ethminer', 'SPEEDLINE', sp)
-            timeCheck = time.time()
+        #if (time.time() - timeCheck) > config['speed-refresh']:
+            #if ethminer.gotHPS:
+                #log.logDynamic('ethminer', 'SPEEDLINE', ethminer.getSpeedOutput())
+            #timeCheck = time.time()
 
 except KeyboardInterrupt:
     log.log('info','Received quit shortcut, stopping processes...')
     log.log('info', 'Please wait to avoid ethereum directory corruption.')
-
-except GethDiedException:
-    log.log('ERROR', 'Geth has died, exiting.')
-
-except Exception:
-    print traceback.format_exc()
 
 finally:
     

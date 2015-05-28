@@ -4,6 +4,7 @@ A short script to mine Ether and parse the output to produce more meaningful inf
 ## Features
 * One command spawns all neccessary tasks
 * Meaningful log messages
+* Query for accounts and balances
 * Average hash rate, updates on one line
 * Mine on GPU or CPU
 * Benchmarking
@@ -31,6 +32,12 @@ python runminer.py -G --geth="../go-ethereum/build/bin/geth" --ethminer="/usr/bi
 [22:37  ethminer]	Full DAG loaded 
 [22:37  ethminer]	Average Speed: 1.798Mh/s 
 ```
+
+## Query for accounts and balances
+* Type 'h' whilst RunEthereumMiner is running to view help
+* Type 'q' whilst RunEthereumMiner is running to quit
+* Type 'a' whilst RunEthereumMiner is running to view accounts
+* Type 'b' whilst RunEthereumMiner is running to view balances
 
 ## More Information
 For more information on installing Geth and Ethminer take a look at the [wiki](http://ethereum.gitbooks.io/frontier-guide/content/mining.html).

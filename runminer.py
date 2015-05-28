@@ -107,9 +107,31 @@ def turnEchoOn():
     Popen(['stty', 'echo'])
 
 def printInputChars(log):
-    log.log('info', 'Supported keyboard shortcuts:')
-    log.log('info', 'h)  Show this help.\tq)   Quit')
-    log.log('info', 'a)  Show accounts.\tb)   Show balance')
+    log.logColour('info', 'Supported keyboard shortcuts:', 'bold')
+    log.logColour('info', '-------------------------------------------', 'bold')
+    log.logColours('info', 
+        [
+            'h)',
+            '  Show this help text \t',
+            'q)',
+            '  Quit'], 
+        [
+            'red',
+            'bold',
+            'red',
+            'bold'
+        ])
+    log.logColours('info', [
+            'a)',
+            '  Show accounts \t',
+            'b)',
+            '  Show balance'], 
+        [
+            'red',
+            'bold',
+            'red',
+            'bold'
+        ])
 
 def handleInput(log, char, json, inputThread):
     if char == 'q':

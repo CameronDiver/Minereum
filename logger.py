@@ -136,4 +136,19 @@ class Logger(object):
             self.internalLogDyn(source, message)
             self.dynamic = (dynId, source, message)
             self.dynamicLine = True
-            
+    
+    def logColour(self, source, text, colour):
+        self.log(source, self.integrateColour(text, colour))
+
+    def logColours(self, source, texts, colours):
+        out = ''
+        for text, col in zip(texts, colours):
+            out += self.integrateColour(text, col)
+        self.log(source, out)
+
+    def integrateColour(self, text, colour):
+        return '%s%s%s' % (
+                self.colours[colour],
+                text,
+                self.colours['end']
+            )

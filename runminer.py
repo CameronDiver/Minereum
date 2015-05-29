@@ -6,7 +6,7 @@ import getopt
 import traceback
 
 from logger import Logger
-from emmarshal import EthminerMarshal
+from emmarshal import EthminerMarshal, EthminerDiedException
 from gethmarshal import GethMarshal
 from inputthread import InputThread
 from gethjson import GethJSON
@@ -190,6 +190,8 @@ try:
     
     time.sleep(1)
     while True:
+        if not ethminer.running():
+            raise EthminerDiedException
         lines = ethminer.getOutput()
         
         for line in lines:
@@ -233,6 +235,13 @@ except KeyboardInterrupt:
 except GethDiedException:
     log.log('ERROR', 'Geth has died, exiting.')
 
+except EthminerDiedException:
+    if config['benchmark']:
+        # this is fine
+        log.log('info', 'Benchmark complete, exiting.')
+    else:
+        log.log('ERROR', 'Ethminer has died. Exiting.')
+
 except Exception:
     print traceback.format_exc()
 
@@ -240,11 +249,13 @@ finally:
     
     inputThread.stopEvent.set()
     
-    ethminer.process.terminate()
-    ethminer.stop()
+    if ethminer.running():
+        ethminer.process.terminate()
+        ethminer.stop()
     
     if config['run-server']:
-        geth.killGeth()
+        if geth.isRunning():
+            geth.killGeth()
 
     turnEchoOn()
     sys.exit()

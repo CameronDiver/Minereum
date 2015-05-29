@@ -5,6 +5,10 @@ import re
 
 from Queue import Empty
 
+class EthminerDiedException(Exception):
+    def __init__(self):
+        pass
+
 # utf8 chars
 INFO = '\xe2\x84\xb9'
 
@@ -74,9 +78,12 @@ class EthminerMarshal(object):
         
         for line in lines:
             stripped = self.getStrippedLine(line)
-            
+            if self.config['benchmark']:
+                ret.append(('', ' '.join(stripped)))
+                continue
             try:
-                # TODO: stripped[2:] may be the only thing we're ever interested in
+                # TODO: stripped[2:] may be the only thing we're 
+                # ever interested in (after next line)
                 if self.isJSONProblemLine(stripped):
                     ret.append(('CONNECTLINE', 'Connecting to geth JSON...'))
                     self.state['connection-problem'] = True
@@ -132,7 +139,6 @@ class EthminerMarshal(object):
         self.speedList[self.speedListIdx] = hps
         self.speedListIdx += 1
 
-
     def isLoadingFullDAGLine(self, stripped):
         return stripped[0] == "Loading" and stripped[1] == "full" and stripped[2] == "DAG"
 
@@ -173,22 +179,22 @@ class EthminerMarshal(object):
         
             #line = self.process.stderr.readline()    
             line = os.read(self.process.stderr.fileno(), 2048)
-        
-            lines += line.split('\n')
+            if line != '':
+                lines += [x for x in line.split('\n') if len(x) > 1 and len(x) != 0]
 
         
 
         if self.process.stdout.fileno() in ret[0]:
             #line = self.process.stdout.readline()
             line = os.read(self.process.stdout.fileno(), 2048)
-            
-            lines += line.split('\n')
+            if line != '':
+                lines += [x for x in line.split('\n') if len(x) != 0]
         
         return lines
 
     def running(self):
         # not sure if this works...
-        return self.process.poll()
+        return self.process.poll() is None
 
 
     def getStrippedLine(self, line):

@@ -144,7 +144,8 @@ def handleInput(log, char, json, inputThread):
         for idx, acc in enumerate(accs):
             log.log('info', '['+str(idx+1)+'] '+str(acc))
     elif char == 'b':
-        log.log('info', 'Please enter the id of the account (from the accounts command)...')
+        json.getDefaultBalance();
+        log.log('info', 'Please enter the id of the account or press enter to view the default account balance.....')
         while not inputThread.hasChar():
             pass
         c = inputThread.getChar()
@@ -154,11 +155,9 @@ def handleInput(log, char, json, inputThread):
             bal  = json.weiToEther(json.getBalance(accs[i-1]))
             log.log('info', 'Account %i has a balance of %f Eth' % (i, bal))
         except:
-            log.log('info', 'Invalid account ID')
-
-
-
-    
+            coinbase = json.getCoinbase()
+            bal = json.weiToEther(json.getDefaultBalance())
+            log.log('info', 'Default account %s has a balance of %f Eth' % (coinbase, bal))
 
 
 config = getOptions(sys.argv[1:])

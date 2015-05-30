@@ -10,8 +10,15 @@ class GethJSON:
         self.addr = addr
         self.server = jsonrpclib.Server(addr[0]+':'+str(addr[1]))
 
+    def weiToEther(self, wei):
+        ethInWei = 1000000000000000000
+        return float(wei)/ethInWei
+
     def getAccounts(self):
         return self.server.eth_accounts()
+
+    def getCoinbase(self):
+        return self.server.eth_coinbase()
 
     def getMostRecentBlockNumber(self):
         return self.server.eth_blockNumber()
@@ -28,6 +35,10 @@ class GethJSON:
     def getBalance(self, account, tag='latest'):
         return int(self.server.eth_getBalance(account, tag), 16)
 
+    def getDefaultBalance(self):
+        coinbase = self.getCoinbase()
+        return self.getBalance(coinbase)
+
     def getWork(self):
         ret = self.server.eth_getWork()
         dictRet = {
@@ -37,9 +48,6 @@ class GethJSON:
         }
         return dictRet
 
-    def weiToEther(self, wei):
-        ethInWei = 1000000000000000000
-        return float(wei)/ethInWei
 
 
 

@@ -108,7 +108,7 @@ class EthminerMarshal(object):
                     #ret.append(('SPEEDLINE', self.getSpeedOutput()))
                 elif self.isDAGLoadedLine(stripped[2:]):
                     ret.append(('/DAGLINE', ' '.join(stripped[2:])))
-                    self.state['DAG-loaded'] = True
+                    #self.state['DAG-loaded'] = True
                 elif self.isWorkPackageConfirmLine(stripped[2:]):
                     pass
                     #ret.append(('/DAGLINE', ' '.join(stripped[2:])))

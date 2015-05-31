@@ -1,5 +1,5 @@
-# RunEthereumMiner
-A short script to mine Ether and parse the output to produce more meaningful information. RunEthereumMiner starts an ethereum node using Geth and a standalone miner using Ethminer. Geth works in conjunction with Ethminer, using Ethminer as a worker and Geth as a scheduler.
+# Minereum
+A short script to mine Ether and parse the output to produce more meaningful information. Minereum starts an ethereum node using Geth and a standalone miner using Ethminer. Geth works in conjunction with Ethminer, using Ethminer as a worker and Geth as a scheduler.
 
 ## Features
 * One command spawns all neccessary tasks
@@ -17,14 +17,14 @@ A short script to mine Ether and parse the output to produce more meaningful inf
 * Run the command `python runminer.py -h` to view the usage options
 
 ## GPU Mining
-* Run the command `python runminer.py -G --geth="path to Geth" --ethminer="path to Ethminer`
+* Run the command `minereum -G --geth="path to Geth" --ethminer="path to Ethminer`
 
 ## CPU Mining
-* Run the command `python runminer.py --geth="path to Geth" --ethminer="path to Ethminer`
+* Run the command `minereum --geth="path to Geth" --ethminer="path to Ethminer`
 
 ## Output
 ```
-python runminer.py -G --geth="../go-ethereum/build/bin/geth" --ethminer="/usr/bin/ethminer"
+./minereum -G --geth="../go-ethereum/build/bin/geth" --ethminer="/usr/bin/ethminer"
 [22:37  info]	Running command '../go-ethereum/build/bin/geth --rpccorsdomain localhost --rpc'
 [22:37  info]	Running command '/usr/bin/ethminer -G'
 [22:37  ethminer]	Connecting to geth JSON... 
@@ -34,10 +34,10 @@ python runminer.py -G --geth="../go-ethereum/build/bin/geth" --ethminer="/usr/bi
 ```
 
 ## Query for accounts and balances
-* Type 'h' whilst RunEthereumMiner is running to view help
-* Type 'q' whilst RunEthereumMiner is running to quit
-* Type 'a' whilst RunEthereumMiner is running to view accounts
-* Type 'b' whilst RunEthereumMiner is running to view balances
+* Type 'h' whilst Minereum is running to view help
+* Type 'q' whilst Minereum is running to quit
+* Type 'a' whilst Minereum is running to view accounts
+* Type 'b' whilst Minereum is running to view balances
 
 ## More Information
 For more information on installing Geth and Ethminer take a look at the [wiki](http://ethereum.gitbooks.io/frontier-guide/content/mining.html).
